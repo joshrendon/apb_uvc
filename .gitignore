@@ -1,0 +1,14 @@
+# Vivado temporary files
+*.log
+*.jou
+*.str
+.Xil/
+*.pb
+*.jou
+
+# Project outputs and simulation
+project_2.cache/
+project_2.hw/
+project_2.ip_user_files/
+project_2.runs/
+project_2.sim/
