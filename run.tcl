@@ -55,7 +55,7 @@ set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects 
 # Using your correct class name: rand_apb_test
 # Update xsim.simulate.xsim.more_options to include this script
 #set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TEST=random_apb_test -testplusarg UVM_VERBOSITY=UVM_LOW -tclbatch vcd_setup.tcl} -objects $obj
-set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TEST=random_apb_test -testplusarg UVM_VERBOSITY=UVM_LOW} -objects $obj
+set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TEST=apb_interleaved_test -testplusarg UVM_VERBOSITY=UVM_LOW} -objects $obj
 
 
 # 7. Set Top and Launch

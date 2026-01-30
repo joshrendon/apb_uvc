@@ -24,48 +24,38 @@ class apb_master_driver extends apb_driver;
         `uvm_info("APB_MASTER_DRIVER", $sformatf("slave_idx: %0d", slave_idx), UVM_LOW)
         `uvm_info("APB_MASTER_DRIVER", $sformatf("send_to_dut() req:\n%s", trans.sprint()), UVM_LOW)
 
-        // Setup phase
         @(vif.master_cb);
         vif.master_cb.psel    <= trans.psel;
-        //vif.master_cb.psel    <= (1 << slave_idx);
         vif.master_cb.paddr   <= trans.paddr; 
         vif.master_cb.pwrite  <= trans.pwrite;
         vif.master_cb.penable <= 1'b0;
+        `uvm_info("DEBUG_DRV", $sformatf("Driving PSEL: %0b for ADDR: %0h", trans.psel, trans.paddr), UVM_LOW)
 
         if (trans.pwrite) begin
             `uvm_info(get_type_name(), "Write transaction", UVM_LOW)
             vif.master_cb.pwdata  <= trans.pwdata;
-        end
-        //end else begin
-        //    `uvm_info(get_type_name(), "Read transaction", UVM_LOW)
-        //    trans.prdata = vif.master_cb.prdata;
-        //    //trans.pslverr = vif.master_cb.pslverr;
-        //    `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_LOW)
-        //end
-
-        // Access phase 
-        @(vif.master_cb);
-        vif.master_cb.penable <= 1'b1; // Drive enable to high
-        vif.master_cb.psel    <= trans.psel;
-
-        // @ait state logic in access phase
-        do begin
-           if (vif.master_cb.pready == 1'b1) break;
-           @(vif.master_cb);
-        end while (1);
-
-        if (trans.pwrite) begin
+        end else begin
             `uvm_info(get_type_name(), "Read transaction", UVM_LOW)
+            vif.master_cb.pwdata  <= 0;
             trans.prdata = vif.master_cb.prdata;
             //trans.pslverr = vif.master_cb.pslverr;
             `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_LOW)
         end
 
-        // Cleanup / transition to Idle phase
-        vif.master_cb.penable <= 1'b0;
-        vif.master_cb.psel    <= 0;
-        vif.master_cb.paddr   <= 0;
-        vif.master_cb.pwdata  <= 0;
+        @(vif.master_cb);
+        // Drive enable to high
+        vif.master_cb.penable <= 1'b1;
+
+        do
+            @(vif.master_cb);
+        while (!vif.master_cb.pready);
+
+        //@(vif.master_cb);
+        //vif.master_cb.penable <= 1'b0;
+        //vif.master_cb.paddr   <= 0; 
+        //vif.master_cb.pwrite  <= 1'b0;
+        //vif.master_cb.pwdata  <= 0;
+        //vif.master_cb.psel    <= 0;
         `uvm_info(get_type_name(), "Completed transaction", UVM_LOW)
     endtask : send_to_dut
 

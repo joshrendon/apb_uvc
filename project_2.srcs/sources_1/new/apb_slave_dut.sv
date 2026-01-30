@@ -54,31 +54,31 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
     end
 
     always_ff @(posedge PCLK or negedge PRESETn) begin
-        if (!PRESETn)
+        if (!PRESETn) begin
             present_state <= IDLE;
-        else
+        end else begin
             present_state <= next_state;
+        end
     end
 
     always_comb begin
         next_state = present_state;
         case (present_state)
             IDLE: begin
-                if (PSEL && !PENABLE)
-                        next_state = SETUP;
+                if (PSEL)
+                    next_state = SETUP;
             end
             SETUP: begin
                 if (PSEL && PENABLE) begin
-                        next_state = ACCESS;
+                    next_state = ACCESS;
                 end else if (!PSEL) begin
                     next_state = IDLE;
                 end
             end
             ACCESS: begin
-                if (!PSEL || !PENABLE) 
+                //if (!PSEL || !PENABLE) 
+                if (!PSEL || (PENABLE && PREADY)) 
                     next_state = IDLE;
-                else 
-                    next_state = ACCESS;
             end
         endcase
     end

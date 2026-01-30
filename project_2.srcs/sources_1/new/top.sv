@@ -57,19 +57,22 @@ module top;
                          mif.psel[1] ? pslverr_s1 : '0;
 
     initial begin
+        pnse = 0;
+        pprot = 0;
         mif.pclk    = 0;
+        mif.paddr   = 0;
+        mif.pwdata  = 0;
+        mif.pstrb   = 0;
+        mif.psel    = 0;
     end
     always #10 mif.pclk = ~mif.pclk;
     
     initial begin
-        //clk    = 0;
         mif.prstn   = 1;
         repeat (1) @(posedge mif.pclk);
         mif.prstn   = 0;
         repeat (1) @(posedge mif.pclk);
         mif.prstn   = 1;
-        pprot  = 0;
-        pnse   = 0;
     end
 
     //initial begin
@@ -78,7 +81,8 @@ module top;
     //end
     initial begin
         uvm_config_db#(virtual apb_interface)::set(uvm_root::get(), "*", "vif", mif);
-        run_test("random_apb_test");
+        //run_test("random_apb_test");
+        run_test("apb_interleaved_test");
     end
     
 
