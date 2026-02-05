@@ -18,7 +18,8 @@ class apb_env extends uvm_env;
 
     virtual function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        agent.ap.connect(scb.item_export);
+        //agent.ap.connect(scb.ap_in);
+        agent.mon.item_collected_port.connect(scb.ap_in);
     endfunction : connect_phase
 endclass
 `endif

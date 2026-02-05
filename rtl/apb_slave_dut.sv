@@ -49,7 +49,7 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
 
     initial begin
         foreach (mem[i]) begin
-            mem[i] = i;
+            mem[i] = '0;
         end
     end
 
@@ -76,7 +76,6 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
                 end
             end
             ACCESS: begin
-                //if (!PSEL || !PENABLE) 
                 if (!PSEL || (PENABLE && PREADY)) 
                     next_state = IDLE;
             end
@@ -98,9 +97,7 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
         if (!PRESETn) begin
             PREADY <= 1'b0;
             PSLVERR <= 1'b0;
-            //PRDATA <= 0;
         end else begin
-            //PREADY  <= 1'b0; // default
             if ((present_state == ACCESS)) begin
                 PREADY <= 1'b1;
                 if (addr_index > 31) begin
@@ -112,7 +109,6 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
                 PREADY <= 1'b0;
                 PSLVERR <= 1'b0;
             end
-            //PSLVERR <= 1'b0;
         end
     end
 endmodule

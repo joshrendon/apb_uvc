@@ -31,7 +31,7 @@ module tb_top;
         uvm_config_db#(virtual apb_interface)::set(uvm_root::get(), "*", "vif", hdl_top.mif);
 
         //run_test("random_apb_test");
-        run_test("apb_interleaved_read_test");
+        run_test("apb_wr_test");
     end
     
 endmodule

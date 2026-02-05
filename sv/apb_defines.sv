@@ -18,4 +18,6 @@
     `ifndef APB_MAX_SEL_WIDTH
         `define APB_MAX_SEL_WIDTH 2
     `endif
+
+    `define APB_BASE_REGION_ADDR 32'h4000_0000
 `endif
