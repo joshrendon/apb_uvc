@@ -1,11 +1,10 @@
 `timescale 1ns / 1ps
-module top;
-    `include "uvm_macros.svh"
-    import uvm_pkg::*;
-    import apb_pkg::*;
-    `include "apb_types.sv"
-    `include "apb_interface.sv"
-    
+module top(
+    input logic sys_clk,
+    input logic sys_rst_n,
+    output logic [7:0] leds
+);
+    `include "apb_defines.sv"
     logic [2:0] pprot;
     logic pnse;
 
@@ -14,6 +13,8 @@ module top;
     logic [`APB_MAX_DATA_WIDTH-1:0] prdata_s0, prdata_s1;
 
     apb_interface mif();
+    assign mif.pclk = sys_clk;
+    assign mif.prstn = sys_rst_n;
     
     apb_slave_dut #(.ADDR_WIDTH(`APB_MAX_ADDR_WIDTH), .DATA_WIDTH(`APB_MAX_DATA_WIDTH)) slave_0 (
       .PCLK(mif.pclk),
@@ -44,7 +45,14 @@ module top;
       .PRDATA(prdata_s1),
       .PSLVERR(pslverr_s1)
     );
-
+    
+    initial begin
+        pprot = 3'b000;
+        pnse  = 1'b0;
+        prdata_s0 = '0;
+        prdata_s1 = '0;
+    end
+    
     // Simple OR-reduction for PREADY (assuming inactive slaves drive 0)
     // Or a Mux based on which PSEL is active
     assign mif.pready = mif.psel[0] ? pready_s0 : 
@@ -56,34 +64,6 @@ module top;
     assign mif.pslverr = mif.psel[0] ? pslverr_s0 : 
                          mif.psel[1] ? pslverr_s1 : '0;
 
-    initial begin
-        pnse = 0;
-        pprot = 0;
-        mif.pclk    = 0;
-        mif.paddr   = 0;
-        mif.pwdata  = 0;
-        mif.pstrb   = 0;
-        mif.psel    = 0;
-    end
-    always #10 mif.pclk = ~mif.pclk;
-    
-    initial begin
-        mif.prstn   = 1;
-        repeat (1) @(posedge mif.pclk);
-        mif.prstn   = 0;
-        repeat (1) @(posedge mif.pclk);
-        mif.prstn   = 1;
-    end
-
-    //initial begin
-    //    $dumpfile("apb_wave_dump.vcd");
-    //    $dumpvars;
-    //end
-    initial begin
-        uvm_config_db#(virtual apb_interface)::set(uvm_root::get(), "*", "vif", mif);
-        //run_test("random_apb_test");
-        run_test("apb_interleaved_test");
-    end
-    
+    assign leds = mif.prdata[7:0];
 
 endmodule

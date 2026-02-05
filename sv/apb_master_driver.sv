@@ -20,26 +20,27 @@ class apb_master_driver extends apb_driver;
 
     virtual task send_to_dut(apb_seq_item trans);
         int slave_idx = get_psel_index(trans.paddr);
-        `uvm_info("APB_MASTER_DRIVER", "send_to_dut recieved seq - trans", UVM_LOW)
-        `uvm_info("APB_MASTER_DRIVER", $sformatf("slave_idx: %0d", slave_idx), UVM_LOW)
+        //`uvm_info("APB_MASTER_DRIVER", "send_to_dut recieved seq - trans", UVM_LOW)
+        //`uvm_info("APB_MASTER_DRIVER", $sformatf("slave_idx: %0d", slave_idx), UVM_LOW)
         `uvm_info("APB_MASTER_DRIVER", $sformatf("send_to_dut() req:\n%s", trans.sprint()), UVM_LOW)
 
         @(vif.master_cb);
         vif.master_cb.psel    <= trans.psel;
         vif.master_cb.paddr   <= trans.paddr; 
         vif.master_cb.pwrite  <= trans.pwrite;
+        vif.master_cb.pstrb   <= trans.pstrb;
         vif.master_cb.penable <= 1'b0;
-        `uvm_info("DEBUG_DRV", $sformatf("Driving PSEL: %0b for ADDR: %0h", trans.psel, trans.paddr), UVM_LOW)
+        //`uvm_info("DEBUG_DRV", $sformatf("Driving PSEL: %0b for ADDR: %0h", trans.psel, trans.paddr), UVM_LOW)
 
         if (trans.pwrite) begin
-            `uvm_info(get_type_name(), "Write transaction", UVM_LOW)
+            `uvm_info(get_type_name(), "Write transaction", UVM_HIGH)
             vif.master_cb.pwdata  <= trans.pwdata;
         end else begin
-            `uvm_info(get_type_name(), "Read transaction", UVM_LOW)
+            `uvm_info(get_type_name(), "Read transaction", UVM_HIGH)
             vif.master_cb.pwdata  <= 0;
             trans.prdata = vif.master_cb.prdata;
             //trans.pslverr = vif.master_cb.pslverr;
-            `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_LOW)
+            `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_HIGH)
         end
 
         @(vif.master_cb);
@@ -56,7 +57,7 @@ class apb_master_driver extends apb_driver;
         //vif.master_cb.pwrite  <= 1'b0;
         //vif.master_cb.pwdata  <= 0;
         //vif.master_cb.psel    <= 0;
-        `uvm_info(get_type_name(), "Completed transaction", UVM_LOW)
+        `uvm_info(get_type_name(), "Completed transaction", UVM_HIGH)
     endtask : send_to_dut
 
     function int get_psel_index(apb_addr_t addr);
@@ -65,8 +66,8 @@ class apb_master_driver extends apb_driver;
             //`uvm_info("APB_MASTER_DRIVER", $sformatf("cfg.slave_end_addr[%0d]:0x%0h", i, cfg.slave_end_addr[i]), UVM_LOW)
             //`uvm_info("APB_MASTER_DRIVER", $sformatf("addr: 0x%0h", addr), UVM_LOW)
             if (addr >= cfg.slave_start_addr[i] && addr <= cfg.slave_end_addr[i])
-                `uvm_info("APB_MASTER_DRIVER", $sformatf("addr: 0x%0h within slave[%0d] region", addr, i), UVM_LOW)
-                `uvm_info("APB_MASTER_DRIVER", $sformatf("returning i: %0d", i), UVM_LOW)
+                `uvm_info("APB_MASTER_DRIVER", $sformatf("addr: 0x%0h within slave[%0d] region", addr, i), UVM_HIGH)
+                `uvm_info("APB_MASTER_DRIVER", $sformatf("returning i: %0d", i), UVM_HIGH)
                 return i;
         end
         `uvm_error("APB_MASTER_DRIVER", $sformatf("Address %h is not mapped to any slave!", addr))

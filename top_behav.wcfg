@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_top_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="apb_pkg" />
+            <top_module name="glbl" />
+            <top_module name="std" />
+            <top_module name="tb_top" />
+            <top_module name="uvm_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,409.501 ns"></ZoomEndTime>
+      <Cursor1Time time="810.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="533"></NameColumnWidth>
+      <ValueColumnWidth column_width="235"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="35" />
+   <wvobject type="logic" fp_name="/tb_top/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/rst_n">
+      <obj_property name="ElementShortName">rst_n</obj_property>
+      <obj_property name="ObjectShortName">rst_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider43" type="divider">
+      <obj_property name="label">slave_s0</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PCLK">
+      <obj_property name="ElementShortName">PCLK</obj_property>
+      <obj_property name="ObjectShortName">PCLK</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PRESETn">
+      <obj_property name="ElementShortName">PRESETn</obj_property>
+      <obj_property name="ObjectShortName">PRESETn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/PADDR">
+      <obj_property name="ElementShortName">PADDR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PADDR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/PPROT">
+      <obj_property name="ElementShortName">PPROT[2:0]</obj_property>
+      <obj_property name="ObjectShortName">PPROT[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PNSE">
+      <obj_property name="ElementShortName">PNSE</obj_property>
+      <obj_property name="ObjectShortName">PNSE</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PSEL">
+      <obj_property name="ElementShortName">PSEL</obj_property>
+      <obj_property name="ObjectShortName">PSEL</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PENABLE">
+      <obj_property name="ElementShortName">PENABLE</obj_property>
+      <obj_property name="ObjectShortName">PENABLE</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PWRITE">
+      <obj_property name="ElementShortName">PWRITE</obj_property>
+      <obj_property name="ObjectShortName">PWRITE</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/PWDATA">
+      <obj_property name="ElementShortName">PWDATA[7:0]</obj_property>
+      <obj_property name="ObjectShortName">PWDATA[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PSLVERR">
+      <obj_property name="ElementShortName">PSLVERR</obj_property>
+      <obj_property name="ObjectShortName">PSLVERR</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/PRDATA">
+      <obj_property name="ElementShortName">PRDATA[7:0]</obj_property>
+      <obj_property name="ObjectShortName">PRDATA[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_0/PREADY">
+      <obj_property name="ElementShortName">PREADY</obj_property>
+      <obj_property name="ObjectShortName">PREADY</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/present_state">
+      <obj_property name="ElementShortName">present_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">present_state[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/next_state">
+      <obj_property name="ElementShortName">next_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">next_state[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_0/addr_index">
+      <obj_property name="ElementShortName">addr_index[4:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_index[4:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="divider49" type="divider">
+      <obj_property name="label">slave_s1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PCLK">
+      <obj_property name="ElementShortName">PCLK</obj_property>
+      <obj_property name="ObjectShortName">PCLK</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PRESETn">
+      <obj_property name="ElementShortName">PRESETn</obj_property>
+      <obj_property name="ObjectShortName">PRESETn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/PADDR">
+      <obj_property name="ElementShortName">PADDR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PADDR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/PPROT">
+      <obj_property name="ElementShortName">PPROT[2:0]</obj_property>
+      <obj_property name="ObjectShortName">PPROT[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PNSE">
+      <obj_property name="ElementShortName">PNSE</obj_property>
+      <obj_property name="ObjectShortName">PNSE</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PSEL">
+      <obj_property name="ElementShortName">PSEL</obj_property>
+      <obj_property name="ObjectShortName">PSEL</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PENABLE">
+      <obj_property name="ElementShortName">PENABLE</obj_property>
+      <obj_property name="ObjectShortName">PENABLE</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PWRITE">
+      <obj_property name="ElementShortName">PWRITE</obj_property>
+      <obj_property name="ObjectShortName">PWRITE</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/PWDATA">
+      <obj_property name="ElementShortName">PWDATA[7:0]</obj_property>
+      <obj_property name="ObjectShortName">PWDATA[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PSLVERR">
+      <obj_property name="ElementShortName">PSLVERR</obj_property>
+      <obj_property name="ObjectShortName">PSLVERR</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/PRDATA">
+      <obj_property name="ElementShortName">PRDATA[7:0]</obj_property>
+      <obj_property name="ObjectShortName">PRDATA[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/tb_top/hdl_top/slave_1/PREADY">
+      <obj_property name="ElementShortName">PREADY</obj_property>
+      <obj_property name="ObjectShortName">PREADY</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/present_state">
+      <obj_property name="ElementShortName">present_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">present_state[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/next_state">
+      <obj_property name="ElementShortName">next_state[1:0]</obj_property>
+      <obj_property name="ObjectShortName">next_state[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/slave_1/addr_index">
+      <obj_property name="ElementShortName">addr_index[4:0]</obj_property>
+      <obj_property name="ObjectShortName">addr_index[4:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/tb_top/hdl_top/leds">
+      <obj_property name="ElementShortName">leds[7:0]</obj_property>
+      <obj_property name="ObjectShortName">leds[7:0]</obj_property>
+   </wvobject>
+</wave_config>

@@ -86,3 +86,28 @@ class apb_interleaved_test extends apb_test;
         phase.drop_objection(this);
     endtask
 endclass
+
+class apb_interleaved_read_test extends apb_test;
+    `uvm_component_utils(apb_interleaved_read_test)
+
+    function new(string name = "apb_interleaved_read_test", uvm_component parent = null);
+        super.new(name, parent);
+    endfunction
+
+    virtual function void build_phase(uvm_phase phase);
+        // Set the interleaved sequence as the default for the master sequencer
+        uvm_config_db#(uvm_object_wrapper)::set(this, "env.agent.seq.main_phase", "default_sequence", apb_interleaved_read_test_seq::type_id::get());
+            
+        super.build_phase(phase);
+    endfunction
+
+    virtual task run_phase(uvm_phase phase);
+        apb_interleaved_read_test_seq seq;
+        phase.raise_objection(this);
+        seq = apb_interleaved_read_test_seq::type_id::create("seq");
+        `uvm_info("APB_INTERLEAVED_READ_TEST", "run_phase() about to start seq", UVM_LOW)
+
+        seq.start(env.agent.seq);
+        phase.drop_objection(this);
+    endtask
+endclass
