@@ -4,19 +4,19 @@ module top(
     input logic sys_rst_n,
     output logic [7:0] leds
 );
-    `include "apb_defines.sv"
+
     logic [2:0] pprot;
     logic pnse;
-
     logic pready_s0, pready_s1; //preadies for slaves s0, s1
     logic pslverr_s0, pslverr_s1;
-    logic [`APB_MAX_DATA_WIDTH-1:0] prdata_s0, prdata_s1;
+    logic [31:0] prdata_s0, prdata_s1;
 
     apb_interface mif();
     assign mif.pclk = sys_clk;
     assign mif.prstn = sys_rst_n;
+    assign mif.pwdata = 32'hFFFFFFFF;
     
-    apb_slave_dut #(.ADDR_WIDTH(`APB_MAX_ADDR_WIDTH), .DATA_WIDTH(`APB_MAX_DATA_WIDTH)) slave_0 (
+    apb_slave_dut #(.AW(32), .DW(32), .SW(4), .DEPTH(256)) slave_0 (
       .PCLK(mif.pclk),
       .PRESETn(mif.prstn),
       .PADDR(mif.paddr),
@@ -28,10 +28,11 @@ module top(
       .PWDATA(mif.pwdata),
       .PREADY(pready_s0),
       .PRDATA(prdata_s0),
+      .PSTRB(mif.pstrb),
       .PSLVERR(pslverr_s0)
     );
 
-    apb_slave_dut #(.ADDR_WIDTH(`APB_MAX_ADDR_WIDTH), .DATA_WIDTH(`APB_MAX_DATA_WIDTH)) slave_1 (
+    apb_slave_dut #(.AW(32), .DW(32), .SW(4), .DEPTH(256)) slave_1 (
       .PCLK(mif.pclk),
       .PRESETn(mif.prstn),
       .PADDR(mif.paddr),
@@ -43,14 +44,13 @@ module top(
       .PWDATA(mif.pwdata),
       .PREADY(pready_s1),
       .PRDATA(prdata_s1),
+      .PSTRB(mif.pstrb),
       .PSLVERR(pslverr_s1)
     );
     
     initial begin
         pprot = 3'b000;
         pnse  = 1'b0;
-        prdata_s0 = '0;
-        prdata_s1 = '0;
     end
     
     // Simple OR-reduction for PREADY (assuming inactive slaves drive 0)

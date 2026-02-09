@@ -6,7 +6,7 @@ class apb_item extends uvm_sequence_item;
     rand bit                               pwrite;
     rand bit [`APB_MAX_DATA_WIDTH-1:0]     prdata;
     rand bit [`APB_MAX_DATA_WIDTH-1:0]     pwdata;
-    rand bit [`APB_MAX_SEL_WIDTH-1:0]      pstrb;
+    rand bit [`APB_MAX_STROBE_WIDTH-1:0]   pstrb;
     rand bit [`APB_MAX_SEL_WIDTH-1:0]      psel;
     rand bit                               pslverr;
 

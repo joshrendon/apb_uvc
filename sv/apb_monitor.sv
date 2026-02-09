@@ -27,15 +27,17 @@ class apb_monitor extends uvm_monitor;
     endtask : run_phase
 
     task collect_transaction();
-        // 1. Wait for SETUP phase (PSEL must be high, PENABLE is low)
-        @(vif.monitor_cb);
-        //while (vif.monitor_cb.psel === 0) begin
-        //    @(posedge vif.monitor_cb);
-        //end
+        apb_state_t apb_state;
 
-        //if (vif.monitor_cb.pready && vif.monitor_cb.penable) begin
+        // 1. Wait for SETUP phase (PSEL must be high, PENABLE is low)
+        apb_state = APB_IDLE;
+        `uvm_info("apb_monitor", $sformatf("apb_state: %p", apb_state.name()), UVM_LOW)
+        @(vif.monitor_cb);
+
         if (|vif.monitor_cb.psel && !vif.monitor_cb.penable) begin
             trans = apb_item::type_id::create("trans");
+            apb_state = APB_SETUP;
+            `uvm_info("apb_monitor", $sformatf("apb_state: %p", apb_state.name()), UVM_LOW)
 
             trans.paddr  = vif.monitor_cb.paddr;
             trans.pwrite = vif.monitor_cb.pwrite;
@@ -43,28 +45,27 @@ class apb_monitor extends uvm_monitor;
 
             if (vif.monitor_cb.pwrite) begin
                 trans.pwdata = vif.monitor_cb.pwdata;
-                trans.pstrb  = vif.pstrb;
+                trans.pstrb  = vif.monitor_cb.pstrb;
             end 
-            //while (!vif.monitor_cb.pready) begin
-            //    @(vif.monitor_cb);
-            //end
+
             // Wait for the ACCESS Phase & PREADY
             do begin
                 @(vif.monitor_cb);
             end while (!(vif.monitor_cb.penable && vif.monitor_cb.pready));
+            apb_state = APB_ACCESS;
 
             // Sample data once PREADY has been recieved
             if (!vif.monitor_cb.pwrite) begin
                 trans.prdata = vif.monitor_cb.prdata;
             end 
-
-            //trans.pslverr = vif.monitor_cb.pslverr;
+            trans.pslverr = vif.monitor_cb.pslverr;
 
             // Send data to the scoreboard
             item_collected_port.write(trans);
             ->sampling_trans;
             //`uvm_info("apb_monitor", $sformatf("Collected: %s", trans.convert2string()), UVM_LOW)
             `uvm_info("apb_monitor", $sformatf("Collected: %s", trans.sprint()), UVM_LOW)
+            `uvm_info("apb_monitor", $sformatf("apb_state: %s", apb_state.name()), UVM_LOW)
         end
     endtask : collect_transaction
 

@@ -36,6 +36,7 @@ set_property used_in_synthesis true [get_files apb_interface.sv]
 set_property used_in_synthesis true [get_files apb_defines.sv]
 set_property used_in_simulation true [get_files apb_pkg.sv]
 set_property used_in_simulation true [get_files tb_top.sv]
+set_property used_in_simulation true [get_files apb_predictor.sv]
 
 # 5. FORCE apb_types.sv to be a Global Header
 # This makes ADDR_WIDTH available to apb_interface.sv
@@ -61,8 +62,8 @@ set_property top tb_top [get_filesets sim_1]
 launch_simulation -simset $obj -mode behavioral
 
 log_wave -recursive *
-run 1000ns
-#run all
+#run 1000ns
+run all
 
 # Run synthesis
 # Prepare and Launch Synthesis

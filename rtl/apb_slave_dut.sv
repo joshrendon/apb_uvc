@@ -20,20 +20,25 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
+module apb_slave_dut 
+#(parameter AW=32, parameter DW=32, parameter SW=4, parameter DEPTH=256) (
     input PCLK,
     input PRESETn,
-    input [ADDR_WIDTH-1:0] PADDR,
+    input [AW-1:0] PADDR,
     input [2:0] PPROT,
     input PNSE,
     input PSEL,
     input PENABLE,
     input PWRITE,
-    input [DATA_WIDTH-1:0] PWDATA,
+    input [DW-1:0] PWDATA,
+    input [SW-1:0] PSTRB,
     output logic PSLVERR,
-    output logic [DATA_WIDTH-1:0] PRDATA,
-    output reg PREADY
+    output logic [DW-1:0] PRDATA,
+    output logic PREADY
     );
+
+    localparam ADDR_MAX = 32'h0001_0000; // Max size 64KB large
+    localparam INDEX_BITS = $clog2(DEPTH);
 
     typedef enum logic [2:0] {
         IDLE   = 3'b001,
@@ -42,10 +47,12 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
     } apb_state_t;
 
     apb_state_t present_state, next_state;
-    logic [DATA_WIDTH-1:0] mem [0:ADDR_WIDTH-1];
-    logic [4:0] addr_index;
+    logic [DW-1:0] mem [0:DEPTH-1];
+    logic [INDEX_BITS-1:0] addr_index;
+    logic [DW-1:0] prdata_reg;
 
-    assign addr_index = PADDR[6:2]; // align address to a word-boundary
+    assign addr_index = PADDR[INDEX_BITS+1:2]; // align address to a word-boundary
+    assign PRDATA = prdata_reg;
 
     initial begin
         foreach (mem[i]) begin
@@ -83,12 +90,20 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
         endcase
     end
 
-    always_ff @(posedge PCLK) begin
-        if ((present_state == ACCESS) && PSEL && PENABLE ) begin
-            if (PWRITE) begin
-                mem[addr_index] <= PWDATA;
-            end else begin
-                PRDATA <= mem[addr_index];
+    always_ff @(posedge PCLK or negedge PRESETn) begin
+        if (!PRESETn) begin
+            prdata_reg <= '0;
+        end else begin
+            if ((present_state == ACCESS) && PSEL && PENABLE ) begin
+                if (PWRITE) begin
+                    for (int i = 0; i < (DW/8); i++) begin
+                        if (PSTRB[i]) begin
+                            mem[addr_index][(i*8) +: 8] <= PWDATA[(i*8) +: 8];
+                        end
+                    end
+                end else begin
+                    prdata_reg <= mem[addr_index];
+                end
             end
         end
     end
@@ -100,7 +115,9 @@ module apb_slave_dut #(parameter ADDR_WIDTH = 32, parameter DATA_WIDTH = 8) (
         end else begin
             if ((present_state == ACCESS)) begin
                 PREADY <= 1'b1;
-                if (addr_index > 31) begin
+                if (addr_index > ADDR_MAX) begin
+                    PSLVERR <= 1'b1;
+                end else if (PWRITE && (PADDR == 32'h0000_4000)) begin //Error if write to Read-only address (32'h0000_4000)
                     PSLVERR <= 1'b1;
                 end else begin
                     PSLVERR <= 1'b0;

@@ -15,11 +15,21 @@ class apb_master_driver extends apb_driver;
     endfunction : build_phase
 
     virtual task run_phase(uvm_phase phase);
+        @(vif.master_cb);
+        vif.master_cb.psel    <= '0;
+        vif.master_cb.penable <= '0;
+        vif.master_cb.paddr   <= '0;
+        vif.master_cb.pwrite  <= '0;
+        vif.master_cb.pwdata  <= '0; // Clear the Z on data bus
+        vif.master_cb.pstrb   <= '0;
         super.run_phase(phase);
     endtask : run_phase
 
     virtual task send_to_dut(apb_seq_item trans);
         int slave_idx = get_psel_index(trans.paddr);
+        logic [`APB_MAX_DATA_WIDTH-1:0] wdata = 32'b0;
+        logic [`APB_MAX_DATA_WIDTH-1:0] rdata = 0;
+        logic [`APB_MAX_DATA_WIDTH-1:0] final_wdata = '0;
         //`uvm_info("APB_MASTER_DRIVER", "send_to_dut recieved seq - trans", UVM_LOW)
         //`uvm_info("APB_MASTER_DRIVER", $sformatf("slave_idx: %0d", slave_idx), UVM_LOW)
         `uvm_info("APB_MASTER_DRIVER", $sformatf("send_to_dut() req:\n%s", trans.sprint()), UVM_LOW)
@@ -30,18 +40,27 @@ class apb_master_driver extends apb_driver;
         vif.master_cb.pwrite  <= trans.pwrite;
         vif.master_cb.pstrb   <= trans.pstrb;
         vif.master_cb.penable <= 1'b0;
+
         //`uvm_info("DEBUG_DRV", $sformatf("Driving PSEL: %0b for ADDR: %0h", trans.psel, trans.paddr), UVM_LOW)
 
         if (trans.pwrite) begin
             `uvm_info(get_type_name(), "Write transaction", UVM_HIGH)
-            vif.master_cb.pwdata  <= trans.pwdata;
-        end else begin
-            `uvm_info(get_type_name(), "Read transaction", UVM_HIGH)
-            vif.master_cb.pwdata  <= 0;
-            trans.prdata = vif.master_cb.prdata;
-            //trans.pslverr = vif.master_cb.pslverr;
-            `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_HIGH)
+            for (int i = 0; i < (`APB_MAX_DATA_WIDTH/8); i++) begin
+                if (trans.pstrb[i]) begin
+                    wdata[(i*8) +: 8] = trans.pwdata[(i*8) +: 8];
+                end
+            end
+            `uvm_info("APB_MASTER_DRIVER", $sformatf("pwdata: 0x%0h, pstrb: 0b%0b, wdata: 0x%0h", trans.pwdata, trans.pstrb, wdata), UVM_LOW)
+            vif.master_cb.pwdata  <= wdata;
+           
         end
+        //end else begin
+        //    `uvm_info(get_type_name(), "Read transaction", UVM_HIGH)
+        //    vif.master_cb.pwdata  <= 0;
+        //    trans.prdata  = vif.master_cb.prdata;
+        //    trans.pslverr = vif.master_cb.pslverr;
+        //    `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_HIGH)
+        //end
 
         @(vif.master_cb);
         // Drive enable to high
@@ -51,12 +70,14 @@ class apb_master_driver extends apb_driver;
             @(vif.master_cb);
         while (!vif.master_cb.pready);
 
-        //@(vif.master_cb);
-        //vif.master_cb.penable <= 1'b0;
-        //vif.master_cb.paddr   <= 0; 
-        //vif.master_cb.pwrite  <= 1'b0;
-        //vif.master_cb.pwdata  <= 0;
-        //vif.master_cb.psel    <= 0;
+        if (!trans.pwrite) begin
+            `uvm_info(get_type_name(), "Read transaction", UVM_HIGH)
+            vif.master_cb.pwdata  <= 32'b0;
+            trans.prdata  = vif.master_cb.prdata;
+            `uvm_info(get_type_name(), $sformatf("Read data from DUT: PRDATA:0x%0h",trans.prdata), UVM_HIGH)
+        end
+        trans.pslverr = vif.master_cb.pslverr;
+
         `uvm_info(get_type_name(), "Completed transaction", UVM_HIGH)
     endtask : send_to_dut
 
