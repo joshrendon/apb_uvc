@@ -136,3 +136,26 @@ class apb_wr_test extends apb_test;
         phase.drop_objection(this);
     endtask
 endclass
+
+class apb_reg_test extends apb_test;
+    `uvm_component_utils(apb_reg_test)
+
+    function new(string name = "apb_reg_test", uvm_component parent = null);
+        super.new(name, parent);
+    endfunction
+
+    virtual function void build_phase(uvm_phase phase);
+        uvm_config_db#(uvm_object_wrapper)::set(this, "env.agent.seq.main_phase", "default_sequence", apb_reg_test_seq::type_id::get());
+        super.build_phase(phase);
+    endfunction
+
+    virtual task run_phase(uvm_phase phase);
+        apb_reg_test_seq seq;
+        phase.raise_objection(this);
+        seq = apb_reg_test_seq::type_id::create("seq");
+        `uvm_info("APB_REG_TEST", "run_phase() about to start seq", UVM_LOW)
+
+        seq.start(env.agent.seq);
+        phase.drop_objection(this);
+    endtask
+endclass : apb_reg_test

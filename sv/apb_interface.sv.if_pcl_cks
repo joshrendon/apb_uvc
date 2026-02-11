@@ -1,0 +1,140 @@
+`ifndef APB_INTERFACE_SV
+`define APB_INTERFACE_SV
+`include "apb_types.sv"
+`timescale 1ns / 1ps
+
+interface apb_interface(parameter NUM_SLAVES = 2);
+
+    logic pclk;
+    logic prstn;
+    logic [`APB_MAX_ADDR_WIDTH-1:0] paddr;
+    logic [NUM_SLAVES-1:0]  psel;
+    logic penable;
+    logic pwrite;
+    logic [`APB_MAX_DATA_WIDTH-1:0]   prdata;
+    logic [`APB_MAX_DATA_WIDTH-1:0]   pwdata;
+    logic [`APB_MAX_STROBE_WIDTH-1:0] pstrb;
+    logic pready;
+    logic pslverr;
+
+    // Master clocking block used for Drivers
+    clocking master_cb @(posedge pclk);
+        output paddr, psel, penable, pwrite, pwdata, pstrb;
+        input prdata, pslverr, pready;
+    endclocking : master_cb
+
+    // Slave clocking block used for Slave BFMS
+    clocking slave_cb @(posedge pclk);
+        input paddr, psel, penable, pwrite, pwdata, pready, pslverr, pstrb;
+        output prdata;
+    endclocking : slave_cb
+
+    clocking monitor_cb @(posedge pclk);
+        input paddr, psel, penable, pwrite, pwdata, prdata, pready, pslverr;
+        input pstrb;
+    endclocking : monitor_cb
+
+    modport master(clocking master_cb);
+    modport slave(clocking slave_cb);
+    modport passive(clocking monitor_cb);
+
+    typedef enum logic [1:0] {APB_IDLE_STATE, APB_SETUP_STATE, APB_ACCESS_STATE} apb_state_e;
+    //
+    apb_state_e state[NUM_SLAVES], prev_state[NUM_SLAVES]; 
+
+    logic [`APB_MAX_ADDR_WIDTH-1:0] setup_paddr[NUM_SLAVES];
+    logic                           setup_pwrite[NUM_SLAVES];
+    logic [`APB_MAX_DATA_WIDTH-1:0] setup_pwdata[NUM_SLAVES];
+    logic [1:0] psels;
+
+    int unsigned wait_count[NUM_SLAVES];
+    int unsigned cycle_count;
+
+    always @(posedge pclk or negedge prstn) begin
+        if (!prstn) begin
+            for (int i=0; i < NUM_SLAVES; i++) begin
+                state[i]        <= APB_IDLE_STATE;
+                prev_state[i]   <= APB_IDLE_STATE;
+                setup_paddr[i]  <= '0;
+                setup_pwrite[i] <= 0;
+                setup_pwdata[i] <= '0;
+                wait_count[i]   <= 0;
+                cycle_count[i]  <= 0;
+            end
+        end else begin
+            if (cycle_count % 1000 == 0)
+              $display("APB_IF alive @%0t", $time);
+            cycle_count++;
+
+            for (int i = 0; i < NUM_SLAVES; i++) begin
+                    prev_state[i] <= state[i];
+            
+                    // Infer per-slave state
+                    if (!psel[i])
+                      state[i] <= APB_IDLE_STATE;
+                    else if (psel[i] && !penable)
+                      state[i] <= APB_SETUP_STATE;
+                    else
+                      state[i] <= APB_ACCESS_STATE;
+            
+                    // Latch SETUP values at SETUP entry
+                    if (state[i] == APB_SETUP_STATE && prev_state[i] != APB_SETUP_STATE) begin
+                      setup_paddr[i]  <= paddr;
+                      setup_pwrite[i] <= pwrite;
+                      setup_pwdata[i] <= pwdata;
+                      wait_count[i]   <= 0;
+                    end
+            
+                    // ACCESS wait-state tracking
+                    if (state[i] == APB_ACCESS_STATE && !pready)
+                      wait_count[i]++;
+
+                    // ACCESS must follow SETUP
+                    if (state[i] == APB_ACCESS_STATE && prev_state[i] == APB_IDLE_STATE) begin
+                      $error("APB violation @%0t: slave %0d ACCESS without SETUP", $time, i);
+                    end
+                    
+                    // Address must remain stable through ACCESS
+                    if (state[i] == APB_ACCESS_STATE) begin
+                      if (paddr !== setup_paddr[i]) begin
+                        $error("APB violation @%0t: slave %0d PADDR changed in ACCESS", $time, i);
+                      end
+                    end
+            
+                    // Control must remain stable in ACCESS
+                    if (state[i] == APB_ACCESS_STATE) begin
+                      if (pwrite !== setup_pwrite[i]) begin
+                        $error("APB violation @%0t: slave %0d PWRITE changed in ACCESS", $time, i);
+                      end
+                    end
+            
+                    // Write data must remain stable
+                    if (state[i] == APB_ACCESS_STATE && setup_pwrite[i]) begin
+                      if (pwdata !== setup_pwdata[i]) begin
+                        $error("APB violation @%0t: slave %0d PWDATA changed in ACCESS", $time, i);
+                      end
+                    end
+            
+                    // PSEL must stay high until transfer completion
+                    if (prev_state[i] == APB_ACCESS_STATE && !psel[i] && !pready) begin
+                      $error("APB violation @%0t: slave %0d PSEL dropped before PREADY", $time, i);
+                    end
+            
+                    // PSLVERR only valid at completion
+                    if (pslverr && !(state[i] == APB_ACCESS_STATE && pready && psel[i])) begin
+                      $error("APB violation @%0t: slave %0d PSLVERR outside completion", $time, i);
+                    end
+            
+                    // Informational hook: read completion moment
+                    if (!setup_pwrite[i] && state[i] == APB_ACCESS_STATE && pready && psel[i]) begin
+                      // Monitor should sample PRDATA here
+                       $display("APB READ complete slave=%0d addr=%h data=%h waits=%0d",
+                                i, setup_paddr[i], PRDATA, wait_count[i]);
+                    end
+
+            end
+        end
+    end
+
+endinterface
+`endif

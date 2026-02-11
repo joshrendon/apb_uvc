@@ -154,3 +154,42 @@ class apb_wr_test_seq extends uvm_sequence#(apb_seq_item);
 
     endtask
 endclass
+
+class apb_reg_test_seq extends uvm_sequence#(apb_seq_item);
+    `uvm_object_utils(apb_reg_test_seq)
+
+    // Define address ranges for your slaves (adjust to match your cfg)
+    bit [31:0] s0_addr = 32'h4000_1000; // to 32'h4000_101F 
+
+    function new(string name="apb_reg_test_seq");
+        super.new(name);
+    endfunction
+
+    virtual task body();
+        apb_seq_item req;
+        apb_seq_item req2;
+        
+        `uvm_info(get_type_name(), "Starting reg Test", UVM_LOW)
+
+        // Write to Registers starting at REG_BASE_ADDR + (4*i) of slave_S0
+        // 'h00 r_leds
+        // 'h04 r_rgb
+        // 'h08 switches, buttons
+        // 'h0C ID
+        // 'h10 Scratch
+        for(int i=0; i<5; i++) begin
+            req = apb_seq_item::type_id::create("req");
+            assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b1;});
+            start_item(req);
+            finish_item(req);
+        end
+
+        // Then read all registers
+        for(int i=0; i<5; i++) begin
+            req = apb_seq_item::type_id::create("req");
+            assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b0;});
+            start_item(req);
+            finish_item(req);
+        end
+    endtask
+endclass

@@ -54,7 +54,7 @@ add_files -fileset sim_1 -norecurse [glob ./sv/*.sv]
 # 6. Set UVM and Test properties
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects $obj
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects $obj
-set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TEST=apb_wr_test -testplusarg UVM_VERBOSITY=UVM_LOW} -objects $obj
+set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TEST=apb_reg_test -testplusarg UVM_VERBOSITY=UVM_LOW} -objects $obj
 
 
 # 7. Set Top and Launch
