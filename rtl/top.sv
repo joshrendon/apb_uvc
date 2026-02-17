@@ -23,45 +23,51 @@ module top(
     assign mif.prstn = sys_rst_n;
     //assign mif.pwdata = 32'hFFFFFFFF;
     
-    apb_slave_dut #(.AW(32), .DW(32), .SW(4), .DEPTH(256)) slave_0 (
-      .PCLK(mif.pclk),
-      .PRESETn(mif.prstn),
-      .PADDR(mif.paddr),
-      .PPROT(pprot),
-      .PNSE(pnse),
-      .PSEL(mif.psel[0]),
-      .PENABLE(mif.penable),
-      .PWRITE(mif.pwrite),
-      .PWDATA(mif.pwdata),
-      .PREADY(pready_s0),
-      .PRDATA(prdata_s0),
-      .PSTRB(mif.pstrb),
-      .PSLVERR(pslverr_s0),
-      .leds(s0_leds),
-      .rgb_leds(s0_rgb),
-      .switches(sw),
-      .buttons(btn)
-    );
+    //apb_slave_dut #(.AW(32), .DW(32), .SW(4), .DEPTH(256)) slave_0 (
+    //  .PCLK(mif.pclk),
+    //  .PRESETn(mif.prstn),
+    //  .PADDR(mif.paddr),
+    //  .PPROT(pprot),
+    //  .PNSE(pnse),
+    //  .PSEL(mif.psel[0]),
+    //  .PENABLE(mif.penable),
+    //  .PWRITE(mif.pwrite),
+    //  .PWDATA(mif.pwdata),
+    //  .PREADY(pready_s0),
+    //  .PRDATA(prdata_s0),
+    //  .PSTRB(mif.pstrb),
+    //  .PSLVERR(pslverr_s0),
+    //  .leds(s0_leds),
+    //  .rgb_leds(s0_rgb),
+    //  .switches(sw),
+    //  .buttons(btn)
+    //);
 
-    apb_slave_dut #(.AW(32), .DW(32), .SW(4), .DEPTH(256)) slave_1 (
-      .PCLK(mif.pclk),
-      .PRESETn(mif.prstn),
-      .PADDR(mif.paddr),
-      .PPROT(pprot),
-      .PNSE(pnse),
-      .PSEL(mif.psel[1]),
-      .PENABLE(mif.penable),
-      .PWRITE(mif.pwrite),
-      .PWDATA(mif.pwdata),
-      .PREADY(pready_s1),
-      .PRDATA(prdata_s1),
-      .PSTRB(mif.pstrb),
-      .PSLVERR(pslverr_s1)
-    );
+    //apb_slave_dut #(.AW(32), .DW(32), .SW(4), .DEPTH(256)) slave_1 (
+    //  .PCLK(mif.pclk),
+    //  .PRESETn(mif.prstn),
+    //  .PADDR(mif.paddr),
+    //  .PPROT(pprot),
+    //  .PNSE(pnse),
+    //  .PSEL(mif.psel[1]),
+    //  .PENABLE(mif.penable),
+    //  .PWRITE(mif.pwrite),
+    //  .PWDATA(mif.pwdata),
+    //  .PREADY(pready_s1),
+    //  .PRDATA(prdata_s1),
+    //  .PSTRB(mif.pstrb),
+    //  .PSLVERR(pslverr_s1)
+    //);
     
     initial begin
         pprot = 3'b000;
         pnse  = 1'b0;
+        pready_s0 = 1'b0;
+        pready_s1 = 1'b0;
+        prdata_s0 = '0;
+        prdata_s1 = '0;
+        pslverr_s0 = '0;
+        pslverr_s1 = '0;
     end
     
     // Simple OR-reduction for PREADY (assuming inactive slaves drive 0)

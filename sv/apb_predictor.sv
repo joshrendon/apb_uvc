@@ -21,20 +21,20 @@ class apb_predictor extends uvm_component;
         expected.pstrb    = t.pstrb;
         addr_index = t.paddr[INDEX_BITS+1:2];
 
-        `uvm_info("APB_PREDICTOR", $sformatf("apb_item t: Addr 0x%0h R/W:%0b prdata: 0x%0h pwdata: 0x%0h", t.paddr, t.pwrite, t.prdata, t.pwdata), UVM_LOW)
+        `uvm_info("APB_PREDICTOR", $sformatf("apb_item t: Addr 0x%0h R/W:%0b pdata: 0x%0h", t.paddr, t.pwrite, t.pdata), UVM_LOW)
 
         if (t.pwrite) begin
             for (int i = 0; i < (`APB_MAX_DATA_WIDTH/8); i++) begin
                 if (t.pstrb[i]) begin
-                    wdata[(i*8) +: 8] = t.pwdata[(i*8) +: 8];
+                    wdata[(i*8) +: 8] = t.pdata[(i*8) +: 8];
                 end
             end
 
-            expected.pwdata = wdata;
+            expected.pdata = wdata;
             mem[addr_index] = wdata;
-            `uvm_info("APB_PREDICTOR", $sformatf("Addr 0x%0h wrote 0x%0h -> memory 0x%0h", t.paddr, t.pwdata, mem[addr_index]), UVM_LOW)
+            `uvm_info("APB_PREDICTOR", $sformatf("Addr 0x%0h wrote 0x%0h -> memory 0x%0h", t.paddr, t.pdata, mem[addr_index]), UVM_LOW)
         end else begin
-            expected.prdata  = mem[addr_index];
+            expected.pdata  = mem[addr_index];
         end
         expected.pslverr = t.pslverr;
         //`uvm_info("APB_PREDICTOR", $sformatf("t: %0s, expected: %s", t.sprint(), expected.sprint()), UVM_LOW)

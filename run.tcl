@@ -11,7 +11,6 @@ set uvm_include_files {
     apb_types.sv
     apb_item.sv
     apb_agent_config.sv
-    apb_seq_item.sv
     apb_sequence.sv
     apb_sequencer.sv
     apb_driver.sv

@@ -8,6 +8,7 @@ class apb_agent extends uvm_agent;
     apb_monitor          mon;
     apb_master_driver    drv;
     apb_sequencer        seq;
+    apb_config           cfg;
 
     function new(string name="apb_agent", uvm_component parent=null);
         super.new(name,parent);
@@ -15,9 +16,13 @@ class apb_agent extends uvm_agent;
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
+
+        if (!uvm_config_db#(apb_config)::get(this, "", "apb_config", cfg)) begin
+            `uvm_error("CFG_NOT_FOUND", "APB_CFG not found in uvm_config_db")
+        end
         ap = new ("ap", this);
         mon = apb_monitor::type_id::create("mon", this);
-        if (is_active == UVM_ACTIVE) begin
+        if (cfg.is_active == UVM_ACTIVE) begin
             seq = apb_sequencer::type_id::create("seq", this);
             drv = apb_master_driver::type_id::create("drv", this);
         end
@@ -25,7 +30,7 @@ class apb_agent extends uvm_agent;
 
     virtual function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        if (is_active == UVM_ACTIVE) begin
+        if (cfg.is_active == UVM_ACTIVE) begin
             drv.seq_item_port.connect(seq.seq_item_export);
         end
         mon.item_collected_port.connect(this.ap);

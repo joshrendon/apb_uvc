@@ -146,7 +146,8 @@ module apb_slave_dut
   // Read Logic
   always_comb begin
       PRDATA = 32'h0;
-      if ((present_state == ACCESS) && !PWRITE) begin
+      //if ((present_state == ACCESS) && !PWRITE) begin
+      if ((present_state == ACCESS) && PENABLE && !PWRITE) begin
           if (is_reg_space) begin
             case (PADDR)
               (REG_BASE_ADDR + 32'h00): PRDATA = {28'h0, r_leds};

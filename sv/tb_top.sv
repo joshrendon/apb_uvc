@@ -46,7 +46,7 @@ module tb_top;
 `ifndef SYNTHESIS
         uvm_config_db#(virtual interface apb_interface)::set(uvm_root::get(), "*", "vif", hdl_top.mif);
         //run_test("random_apb_test");
-        run_test("apb_reg_test");
+        run_test("apb_slv_test");
 `endif
     end
     

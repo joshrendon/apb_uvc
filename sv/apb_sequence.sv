@@ -1,6 +1,6 @@
-class apb_sequence extends uvm_sequence#(apb_seq_item);
+class apb_sequence extends uvm_sequence#(apb_item);
     `uvm_object_utils(apb_sequence)
-    apb_seq_item apb_seq_itm;
+    apb_item apb_seq_itm;
   
     function new(string name = "apb_sequence");
       super.new(name);
@@ -9,7 +9,7 @@ class apb_sequence extends uvm_sequence#(apb_seq_item);
     task body;
       repeat(5)
         begin
-	    apb_seq_itm = apb_seq_item::type_id::create("apb_seq_itm");
+	    apb_seq_itm = apb_item::type_id::create("apb_seq_itm");
         assert(apb_seq_itm.randomize());
 	    start_item(apb_seq_itm);
 	    finish_item(apb_seq_itm);
@@ -18,7 +18,47 @@ class apb_sequence extends uvm_sequence#(apb_seq_item);
 
 endclass : apb_sequence
 
-class apb_interleaved_test_seq extends uvm_sequence#(apb_seq_item);
+class apb_slave_responder_seq extends uvm_sequence #(apb_item);
+    `uvm_object_utils(apb_slave_responder_seq)
+    `uvm_declare_p_sequencer(apb_slave_sequencer)
+
+    apb_item req;
+
+    function new(string name="apb_slave_responder_seq");
+        super.new(name);
+    endfunction
+
+    task body();
+        `uvm_info("apb_slave_responder_seq", "Starting slave responder seq", UVM_LOW)
+        
+        forever begin
+            req = apb_item::type_id::create("req");
+            if (!req.randomize() with {wait_cycles == 3;}) begin
+                `uvm_error("RAND_FAIL", "slave randomization failed")
+            end
+
+            wait_for_grant();
+
+            `uvm_info("SEQ_DEBUG", $sformatf("I just woke up. Driver told me the address is 0x%0h", req.paddr), UVM_LOW)
+            if (req.pwrite == APB_WRITE) begin
+                p_sequencer.slave_mem[req.paddr] = req.pdata;
+                `uvm_info("SLV_MEM", $sformatf("WRITE: Addr=0x%0h, Data=0x%0h, Pstrb=0x%0h", req.paddr, req.pdata, req.pstrb), UVM_LOW)
+            end else begin
+                if (p_sequencer.slave_mem.exists(req.paddr)) begin
+                    req.pdata = p_sequencer.slave_mem[req.paddr];
+                end else begin
+                    req.pdata = 32'hDEADBEEF;
+                end
+                `uvm_info("SLV_MEM", $sformatf("READ: Addr=0x%0h, Data=0x%0h", req.paddr, req.pdata), UVM_LOW)
+            end
+
+            send_request(req);
+            wait_for_item_done();
+        end
+    endtask
+endclass
+
+class apb_interleaved_test_seq extends uvm_sequence#(apb_item);
     `uvm_object_utils(apb_interleaved_test_seq)
 
     // Define address ranges for your slaves (adjust to match your cfg)
@@ -30,14 +70,14 @@ class apb_interleaved_test_seq extends uvm_sequence#(apb_seq_item);
     endfunction
 
     virtual task body();
-        apb_seq_item req;
-        apb_seq_item req2;
+        apb_item req;
+        apb_item req2;
         
         `uvm_info(get_type_name(), "Starting Interleaved Write/Read Test", UVM_LOW)
 
         for(int i=1; i<5; i++) begin
             // 1. WRITE to Slave 0
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b1; });
             //req.paddr  = s0_addr + (i*4);
             //req.pwrite = 1'b1;
@@ -48,7 +88,7 @@ class apb_interleaved_test_seq extends uvm_sequence#(apb_seq_item);
             //`uvm_do(req)
 
             // 2. READ from Slave 1 (Back-to-Back)
-            req2 = apb_seq_item::type_id::create("req2");
+            req2 = apb_item::type_id::create("req2");
             assert(req2.randomize() with { paddr == s1_addr + (i*4); psel == 2'b10; pwrite == 1'b0; });
             //assert(req2.randomize());
             //req2.paddr  = s1_addr + (i*4);
@@ -61,7 +101,7 @@ class apb_interleaved_test_seq extends uvm_sequence#(apb_seq_item);
     endtask
 endclass
 
-class apb_interleaved_read_test_seq extends uvm_sequence#(apb_seq_item);
+class apb_interleaved_read_test_seq extends uvm_sequence#(apb_item);
     `uvm_object_utils(apb_interleaved_read_test_seq)
 
     // Define address ranges for your slaves (adjust to match your cfg)
@@ -73,14 +113,14 @@ class apb_interleaved_read_test_seq extends uvm_sequence#(apb_seq_item);
     endfunction
 
     virtual task body();
-        apb_seq_item req;
-        apb_seq_item req2;
+        apb_item req;
+        apb_item req2;
         
         `uvm_info(get_type_name(), "Starting Interleaved Read Test", UVM_LOW)
 
         for(int i=1; i<5; i++) begin
             // 1. WRITE to Slave 0
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b0; });
             //req.paddr  = s0_addr + (i*4);
             //req.pwrite = 1'b1;
@@ -91,7 +131,7 @@ class apb_interleaved_read_test_seq extends uvm_sequence#(apb_seq_item);
             //`uvm_do(req)
 
             // 2. READ from Slave 1 (Back-to-Back)
-            req2 = apb_seq_item::type_id::create("req2");
+            req2 = apb_item::type_id::create("req2");
             assert(req2.randomize() with { paddr == s1_addr + (i*4); psel == 2'b10; pwrite == 1'b0; });
             //assert(req2.randomize());
             //req2.paddr  = s1_addr + (i*4);
@@ -104,7 +144,7 @@ class apb_interleaved_read_test_seq extends uvm_sequence#(apb_seq_item);
     endtask
 endclass
 
-class apb_wr_test_seq extends uvm_sequence#(apb_seq_item);
+class apb_wr_test_seq extends uvm_sequence#(apb_item);
     `uvm_object_utils(apb_wr_test_seq)
 
     // Define address ranges for your slaves (adjust to match your cfg)
@@ -116,14 +156,14 @@ class apb_wr_test_seq extends uvm_sequence#(apb_seq_item);
     endfunction
 
     virtual task body();
-        apb_seq_item req;
-        apb_seq_item req2;
+        apb_item req;
+        apb_item req2;
         
         `uvm_info(get_type_name(), "Starting WR Test", UVM_LOW)
 
         for(int i=0; i<5; i++) begin
             // 1. WRITE to Slave 0
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b1;});
             start_item(req);
             finish_item(req);
@@ -132,7 +172,7 @@ class apb_wr_test_seq extends uvm_sequence#(apb_seq_item);
 
         for(int i=0; i<5; i++) begin
             // 1. WRITE to Slave 1
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s1_addr + (i*4); psel == 2'b10; pwrite == 1'b1;});
             start_item(req);
             finish_item(req);
@@ -141,12 +181,12 @@ class apb_wr_test_seq extends uvm_sequence#(apb_seq_item);
 
         // Read after writing
         for(int i=0; i<5; i++) begin
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b0;});
             start_item(req);
             finish_item(req);
 
-            req2 = apb_seq_item::type_id::create("req2");
+            req2 = apb_item::type_id::create("req2");
             assert(req2.randomize() with { paddr == s1_addr + (i*4); psel == 2'b10; pwrite == 1'b0;});
             start_item(req2);
             finish_item(req2);
@@ -155,7 +195,7 @@ class apb_wr_test_seq extends uvm_sequence#(apb_seq_item);
     endtask
 endclass
 
-class apb_reg_test_seq extends uvm_sequence#(apb_seq_item);
+class apb_reg_test_seq extends uvm_sequence#(apb_item);
     `uvm_object_utils(apb_reg_test_seq)
 
     // Define address ranges for your slaves (adjust to match your cfg)
@@ -166,8 +206,8 @@ class apb_reg_test_seq extends uvm_sequence#(apb_seq_item);
     endfunction
 
     virtual task body();
-        apb_seq_item req;
-        apb_seq_item req2;
+        apb_item req;
+        apb_item req2;
         
         `uvm_info(get_type_name(), "Starting reg Test", UVM_LOW)
 
@@ -178,7 +218,7 @@ class apb_reg_test_seq extends uvm_sequence#(apb_seq_item);
         // 'h0C ID
         // 'h10 Scratch
         for(int i=0; i<5; i++) begin
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b1;});
             start_item(req);
             finish_item(req);
@@ -186,10 +226,45 @@ class apb_reg_test_seq extends uvm_sequence#(apb_seq_item);
 
         // Then read all registers
         for(int i=0; i<5; i++) begin
-            req = apb_seq_item::type_id::create("req");
+            req = apb_item::type_id::create("req");
             assert(req.randomize() with { paddr == s0_addr + (i*4); psel == 2'b01; pwrite == 1'b0;});
             start_item(req);
             finish_item(req);
         end
+    endtask
+endclass
+
+class apb_ral_test_seq extends uvm_sequence#(apb_item);
+    `uvm_object_utils(apb_ral_test_seq)
+
+    apb_reg_block reg_block;
+
+    function new(string name="apb_ral_test_seq");
+        super.new(name);
+    endfunction
+
+    virtual task body();
+        uvm_status_e status;
+        uvm_reg_data_t data;
+        if (!uvm_config_db#(apb_reg_block)::get(null, get_full_name(), "reg_block", reg_block)) begin
+            `uvm_fatal("RAL_GET_ERR", "Could not get reg_model from config_db")
+        end
+
+        if (reg_block == null) begin
+            `uvm_fatal("RAL_NULL", "The reg_block is null")
+        end
+
+        // 1. Verify Reset Value of ID Register
+        reg_block.BOARD_ID.read(status, data);
+        if (data != 32'hA735_0001)
+            `uvm_error("RAL", "ID mismatch!")
+
+        // 2. Test RW on LEDs
+        reg_block.GPIO_LEDS.write(status, 4'hF);
+        // On FPGA, you'd see LEDs toggle here. In SIM, check waveform.
+        
+        // 3. Mirror Check (Predictor check)
+        // This performs a read and compares it against the 'desired' value in RAL
+        reg_block.GPIO_LEDS.mirror(status, UVM_CHECK);
     endtask
 endclass

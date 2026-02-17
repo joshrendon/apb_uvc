@@ -4,6 +4,8 @@
 class apb_monitor extends uvm_monitor;
     `uvm_component_utils(apb_monitor)
 
+    apb_agent_config cfg;
+
     virtual apb_interface vif;
     uvm_analysis_port #(apb_item) item_collected_port;
     event sampling_trans;
@@ -18,6 +20,10 @@ class apb_monitor extends uvm_monitor;
         super.build_phase(phase);
         if (!uvm_config_db#(virtual apb_interface)::get(this, "", "vif", vif))
             `uvm_fatal("NOVIF", {"vitual interface must be set for ", get_full_name(), ".vif"});
+        if (!uvm_config_db#(apb_agent_config)::get(this, "", "cfg", cfg)) begin
+            `uvm_error("NOCFG", "Config not found for monitor")
+        end
+        `uvm_info("MON_DBG_PATH", $sformatf("My full path is: %s", get_full_name()), UVM_LOW)
     endfunction
 
     virtual task run_phase(uvm_phase phase);
@@ -32,31 +38,43 @@ class apb_monitor extends uvm_monitor;
         // 1. Wait for SETUP phase (PSEL must be high, PENABLE is low)
         apb_state = APB_IDLE;
         `uvm_info("apb_monitor", $sformatf("apb_state: %p", apb_state.name()), UVM_LOW)
-        @(vif.monitor_cb);
+        //@(vif.monitor_cb);
 
-        if (|vif.monitor_cb.psel && !vif.monitor_cb.penable) begin
+        if (cfg.is_master) begin
+            @(vif.monitor_cb iff (|vif.monitor_cb.psel));
+        end else begin
+            apb_slave_config s_cfg;
+            if ($cast(s_cfg, cfg)) begin
+                @(vif.monitor_cb iff (vif.monitor_cb.psel[s_cfg.psel_index]));
+            end
+        end
+
+        //if (|vif.monitor_cb.psel && !vif.monitor_cb.penable) begin
+        if (!vif.monitor_cb.penable) begin
             trans = apb_item::type_id::create("trans");
             apb_state = APB_SETUP;
             `uvm_info("apb_monitor", $sformatf("apb_state: %p", apb_state.name()), UVM_LOW)
 
             trans.paddr  = vif.monitor_cb.paddr;
-            trans.pwrite = vif.monitor_cb.pwrite;
+            trans.pwrite = apb_direction_t'(vif.monitor_cb.pwrite);
             trans.psel   = vif.monitor_cb.psel;
 
             if (vif.monitor_cb.pwrite) begin
-                trans.pwdata = vif.monitor_cb.pwdata;
-                trans.pstrb  = vif.monitor_cb.pstrb;
+                trans.pdata = vif.monitor_cb.pwdata;
+                trans.pstrb = vif.monitor_cb.pstrb;
             end 
 
             // Wait for the ACCESS Phase & PREADY
-            do begin
-                @(vif.monitor_cb);
-            end while (!(vif.monitor_cb.penable && vif.monitor_cb.pready));
+            //do begin
+            //    @(vif.monitor_cb);
+            ////end while (!(vif.monitor_cb.penable && vif.monitor_cb.pready));
+            //end while (!(vif.monitor_cb.penable && vif.monitor_cb.pready));
+            while (!(vif.monitor_cb.penable && vif.monitor_cb.pready)) @(vif.monitor_cb);
             apb_state = APB_ACCESS;
 
             // Sample data once PREADY has been recieved
             if (!vif.monitor_cb.pwrite) begin
-                trans.prdata = vif.monitor_cb.prdata;
+                trans.pdata = vif.monitor_cb.prdata;
             end 
             trans.pslverr = vif.monitor_cb.pslverr;
 

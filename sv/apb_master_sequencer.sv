@@ -1,8 +1,10 @@
+`ifndef APB_MASTER_SEQUENCER_SV
+`define APB_MASTER_SEQUENCER_SV
 `timescale 1ns / 1ps
-class apb_sequencer extends uvm_sequencer#(apb_item);
-    `uvm_component_utils(apb_sequencer)
+class apb_master_sequencer extends uvm_sequencer#(apb_item);
+    `uvm_component_utils(apb_master_sequencer)
     
-    function new(string name="apb_sequencer", uvm_component parent=null);
+    function new(string name="apb_master_sequencer", uvm_component parent=null);
         super.new(name,parent);
     endfunction
 
@@ -16,3 +18,4 @@ class apb_sequencer extends uvm_sequencer#(apb_item);
         phase.drop_objection(this);
     endtask
 endclass
+`endif
