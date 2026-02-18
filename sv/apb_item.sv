@@ -70,7 +70,7 @@ class apb_item extends uvm_sequence_item;
 
     constraint c_wait {
         wait_cycles inside {[0:5]};
-        }
+    }
 
 endclass
 `endif

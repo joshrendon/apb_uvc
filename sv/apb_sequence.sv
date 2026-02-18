@@ -29,19 +29,36 @@ class apb_slave_responder_seq extends uvm_sequence #(apb_item);
     endfunction
 
     task body();
+        apb_item bus_req;
         `uvm_info("apb_slave_responder_seq", "Starting slave responder seq", UVM_LOW)
         
         forever begin
-            req = apb_item::type_id::create("req");
-            if (!req.randomize() with {wait_cycles == 3;}) begin
-                `uvm_error("RAND_FAIL", "slave randomization failed")
-            end
+            logic [`APB_MAX_DATA_WIDTH-1:0] wdata = 32'b0;
 
-            wait_for_grant();
+            p_sequencer.request_fifo.get(bus_req);
+
+            `uvm_info("SEQ_DEB", $sformatf("bus_req:\n%s", bus_req.sprint()), UVM_LOW)
+
+            req = apb_item::type_id::create("req");
+            req.copy(bus_req);
+            `uvm_info("SEQ_DEB", $sformatf("req:\n%s", req.sprint()), UVM_LOW)
+
+            //--wait_for_grant();
+
+            //--send_request(req);
 
             `uvm_info("SEQ_DEBUG", $sformatf("I just woke up. Driver told me the address is 0x%0h", req.paddr), UVM_LOW)
             if (req.pwrite == APB_WRITE) begin
-                p_sequencer.slave_mem[req.paddr] = req.pdata;
+                //TODO: Apply pstrb signals to pdata
+                for (int i = 0; i < (`APB_MAX_DATA_WIDTH/8); i++) begin
+                    if (req.pstrb[i]) begin
+                        wdata[(i*8) +: 8] = req.pdata[(i*8) +: 8];
+                    end
+                end
+                `uvm_info("SLV_MEM", $sformatf("pdata: 0x%0h, pstrb: 0b%0b, wdata: 0x%0h", req.pdata, req.pstrb, wdata), UVM_LOW)
+                   
+                //p_sequencer.slave_mem[req.paddr] = req.pdata;
+                p_sequencer.slave_mem[req.paddr] = wdata;
                 `uvm_info("SLV_MEM", $sformatf("WRITE: Addr=0x%0h, Data=0x%0h, Pstrb=0x%0h", req.paddr, req.pdata, req.pstrb), UVM_LOW)
             end else begin
                 if (p_sequencer.slave_mem.exists(req.paddr)) begin
@@ -52,8 +69,9 @@ class apb_slave_responder_seq extends uvm_sequence #(apb_item);
                 `uvm_info("SLV_MEM", $sformatf("READ: Addr=0x%0h, Data=0x%0h", req.paddr, req.pdata), UVM_LOW)
             end
 
-            send_request(req);
-            wait_for_item_done();
+            start_item(req);
+            finish_item(req);
+            //--wait_for_item_done();
         end
     endtask
 endclass

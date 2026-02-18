@@ -29,6 +29,10 @@ class apb_scoreboard extends uvm_scoreboard;
 
        `uvm_info("APB_SCOREBOARD", $sformatf("write() t.paddr: 0x%0h", t.paddr), UVM_LOW)
 
+       if (t.paddr == 32'h0) begin
+            `uvm_error("APB_SCB_ZERO_ADDR", "Detected access to address 0, likley slave bug")
+       end
+
         // Skip accesses to memory space reserved for CSR registers
         if (t.paddr >= 32'h4000_1000 && t.paddr <= 32'h4000_101F) begin
             return;

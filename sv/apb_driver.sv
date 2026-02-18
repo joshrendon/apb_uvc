@@ -2,6 +2,7 @@
 class apb_driver extends uvm_driver #(apb_item);
     `uvm_component_utils(apb_driver)
     apb_agent_config      agent_cfg;
+    apb_item req;
     virtual apb_interface vif;
 
     function new(string name="apb_driver", uvm_component parent=null);
@@ -17,7 +18,6 @@ class apb_driver extends uvm_driver #(apb_item);
     endfunction : build_phase
 
     virtual task run_phase(uvm_phase phase);
-        apb_item req;
         forever begin
             seq_item_port.get_next_item(req);
 

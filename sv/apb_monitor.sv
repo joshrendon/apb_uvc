@@ -8,12 +8,14 @@ class apb_monitor extends uvm_monitor;
 
     virtual apb_interface vif;
     uvm_analysis_port #(apb_item) item_collected_port;
+    uvm_analysis_port #(apb_item) request_aport;
     event sampling_trans;
     apb_item trans;
     
     function new(string name="apb_monitor", uvm_component parent=null);
         super.new(name,parent);
         item_collected_port = new("item_collected_port", this);
+        request_aport = new("request_aport", this);
     endfunction
 
     virtual function void build_phase(uvm_phase phase);
@@ -63,12 +65,9 @@ class apb_monitor extends uvm_monitor;
                 trans.pdata = vif.monitor_cb.pwdata;
                 trans.pstrb = vif.monitor_cb.pstrb;
             end 
+            request_aport.write(trans);
 
             // Wait for the ACCESS Phase & PREADY
-            //do begin
-            //    @(vif.monitor_cb);
-            ////end while (!(vif.monitor_cb.penable && vif.monitor_cb.pready));
-            //end while (!(vif.monitor_cb.penable && vif.monitor_cb.pready));
             while (!(vif.monitor_cb.penable && vif.monitor_cb.pready)) @(vif.monitor_cb);
             apb_state = APB_ACCESS;
 

@@ -52,12 +52,26 @@ class reg_id extends uvm_reg;
     endfunction
 endclass
 
+class reg_scratch extends uvm_reg;
+    `uvm_object_utils(reg_scratch)
+    uvm_reg_field val;
+
+    function new(string name = "reg_scratch");
+        super.new(name, 32, UVM_NO_COVERAGE);
+    endfunction
+
+    virtual function void build();
+        val = uvm_reg_field::type_id::create("val");
+        val.configure(this, 32, 0, "RW", 0, 0, 1, 0, 1);
+    endfunction
+endclass
+
 class apb_reg_block extends uvm_reg_block;
     `uvm_object_utils(apb_reg_block)
-    rand reg_leds  GPIO_LEDS;   // @ offset 0x00
-    reg_inputs     GPIO_INPUTS; // @ offset 0x08
-    reg_id         BOARD_ID;    // @ offset 0x0C
-    rand uvm_reg   SCRATCH;
+    rand reg_leds    GPIO_LEDS;   // @ offset 0x00
+    reg_inputs       GPIO_INPUTS; // @ offset 0x08
+    reg_id           BOARD_ID;    // @ offset 0x0C
+    rand reg_scratch SCRATCH;     // @ offset 0x10
 
     function new(string name = "apb_reg_block");
         super.new(name, UVM_NO_COVERAGE);
@@ -81,6 +95,10 @@ class apb_reg_block extends uvm_reg_block;
         BOARD_ID.build();
         default_map.add_reg(BOARD_ID, 'h0C, "RO");
 
+        SCRATCH = reg_scratch::type_id::create("SCRATCH");
+        SCRATCH.configure(this);
+        SCRATCH.build();
+        default_map.add_reg(SCRATCH, 'h10, "RW");
         lock_model();
     endfunction
 endclass

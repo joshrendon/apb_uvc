@@ -21,7 +21,6 @@ class apb_slave_agent extends uvm_agent;
         if (!uvm_config_db#(apb_agent_config)::get(this, "*", "cfg", cfg)) begin
             `uvm_error("CFG_NOT_FOUND", "APB_SLAVE_CFG not found in uvm_config_db")
         end
-        //uvm_config_db#(apb_slave_config)::set(this, "*", "cfg", cfg);
 
         if ($cast(s_cfg, cfg)) begin
             is_active = s_cfg.is_active;
@@ -38,6 +37,7 @@ class apb_slave_agent extends uvm_agent;
         super.connect_phase(phase);
         if (s_cfg.is_active == UVM_ACTIVE) begin
             drv.seq_item_port.connect(seq.seq_item_export);
+            mon.request_aport.connect(seq.request_export);
         end
         mon.item_collected_port.connect(this.ap);
     endfunction

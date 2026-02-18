@@ -172,6 +172,7 @@ class apb_slv_test extends apb_test;
 
     virtual function void build_phase(uvm_phase phase);
         uvm_config_db#(uvm_object_wrapper)::set(this, "env.master_agent.seq.main_phase", "default_sequence", apb_reg_test_seq::type_id::get());
+        uvm_config_db#(uvm_object_wrapper)::set(this, "env.slave_agent.seq.main_phase", "default_sequence", apb_slave_responder_seq::type_id::get());
         uvm_config_db_options::turn_on_tracing();
         super.build_phase(phase);
         uvm_top.print_config(1);

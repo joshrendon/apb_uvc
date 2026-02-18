@@ -34,26 +34,20 @@ class apb_slave_driver extends apb_driver;
         vif.slave_cb.pready  <= 1'b0;
         vif.slave_cb.pslverr <= 1'b0;
         vif.slave_cb.prdata  <= 32'h0;
-
-        // Enter the SETUP Phase
-        @(vif.slave_cb iff (vif.slave_cb.psel[s_cfg.psel_index] && !vif.slave_cb.penable));
-
         `uvm_info("APB_SLV_DRV", "Slave selected, awaiting PENABLE", UVM_LOW)
 
-          seq_item_port.get_next_item(req);
-        req.paddr  = vif.slave_cb.paddr;
-        req.pwrite = (vif.slave_cb.pwrite) ? APB_WRITE : APB_READ;
-        req.pstrb  = vif.slave_cb.pstrb;
-        req.psel   = vif.slave_cb.psel;
-        if (req.pwrite == APB_WRITE) req.pdata = vif.slave_cb.pwdata;
+        // Wait on penable
+        if (vif.slave_cb.penable !== 1'b1) begin
+                @(vif.slave_cb iff (vif.slave_cb.penable === 1'b1));
+        end
 
-        // Enter ACCESS Phase
-        @(vif.slave_cb);
-
-        // Insert wait states (where pready is kept low)
-        repeat (req.wait_cycles) begin
-            vif.slave_cb.pready <= 1'b0;
-            @(vif.slave_cb);
+        //--// Insert wait states (where pready is kept low)
+        if (req.wait_cycles > 0) begin
+            `uvm_info("APB_SLV_DRV", $sformatf("Inserting %0d wait states", req.wait_cycles), UVM_LOW)
+            repeat (req.wait_cycles) begin
+                //vif.slave_cb.pready <= 1'b0;
+                @(vif.slave_cb);
+            end
         end
         
         // Finalize transaction
@@ -61,6 +55,7 @@ class apb_slave_driver extends apb_driver;
             `uvm_info("APB_SLV_DRV", $sformatf("received psel %0d driving req:\n%s", s_cfg.psel_index, req.sprint()), UVM_LOW)
             vif.slave_cb.pready <= 1'b1;
             vif.slave_cb.pslverr <= req.pslverr;
+
             if (vif.slave_cb.pwrite == APB_READ) begin
                  vif.slave_cb.prdata <= req.pdata;
             end

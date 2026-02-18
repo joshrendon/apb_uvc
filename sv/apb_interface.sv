@@ -33,9 +33,5 @@ interface apb_interface();
         input pstrb;
     endclocking : monitor_cb
 
-    //modport master(clocking master_cb);
-    //modport slave(clocking slave_cb);
-    //modport passive(clocking monitor_cb);
-
 endinterface
 `endif
