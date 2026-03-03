@@ -30,48 +30,32 @@ class apb_slave_responder_seq extends uvm_sequence #(apb_item);
 
     task body();
         apb_item bus_req;
-        `uvm_info("apb_slave_responder_seq", "Starting slave responder seq", UVM_LOW)
-        
-        forever begin
-            logic [`APB_MAX_DATA_WIDTH-1:0] wdata = 32'b0;
+        int wait_cycles;
+        `uvm_info("APB_SLV_RESP_SEQ", "Starting slave responder seq", UVM_LOW)
 
+        forever begin
+            `uvm_info("HANG_DEBUG", "Looping...", UVM_NONE)
             p_sequencer.request_fifo.get(bus_req);
 
-            `uvm_info("SEQ_DEB", $sformatf("bus_req:\n%s", bus_req.sprint()), UVM_LOW)
+            //req = apb_item::type_id::create("req");
+            $cast(req, bus_req.clone());
+            //req.copy(bus_req.clone());
+            `uvm_info("APB_SLV_RESP_SEQ", $sformatf("req:\n%s", req.sprint()), UVM_LOW)
 
-            req = apb_item::type_id::create("req");
-            req.copy(bus_req);
-            `uvm_info("SEQ_DEB", $sformatf("req:\n%s", req.sprint()), UVM_LOW)
-
-            //--wait_for_grant();
-
-            //--send_request(req);
-
-            `uvm_info("SEQ_DEBUG", $sformatf("I just woke up. Driver told me the address is 0x%0h", req.paddr), UVM_LOW)
-            if (req.pwrite == APB_WRITE) begin
-                //TODO: Apply pstrb signals to pdata
-                for (int i = 0; i < (`APB_MAX_DATA_WIDTH/8); i++) begin
-                    if (req.pstrb[i]) begin
-                        wdata[(i*8) +: 8] = req.pdata[(i*8) +: 8];
-                    end
-                end
-                `uvm_info("SLV_MEM", $sformatf("pdata: 0x%0h, pstrb: 0b%0b, wdata: 0x%0h", req.pdata, req.pstrb, wdata), UVM_LOW)
-                   
-                //p_sequencer.slave_mem[req.paddr] = req.pdata;
-                p_sequencer.slave_mem[req.paddr] = wdata;
-                `uvm_info("SLV_MEM", $sformatf("WRITE: Addr=0x%0h, Data=0x%0h, Pstrb=0x%0h", req.paddr, req.pdata, req.pstrb), UVM_LOW)
-            end else begin
-                if (p_sequencer.slave_mem.exists(req.paddr)) begin
-                    req.pdata = p_sequencer.slave_mem[req.paddr];
-                end else begin
-                    req.pdata = 32'hDEADBEEF;
-                end
-                `uvm_info("SLV_MEM", $sformatf("READ: Addr=0x%0h, Data=0x%0h", req.paddr, req.pdata), UVM_LOW)
+            `uvm_info("APB_SLV_RESP_SEQ", $sformatf("I just woke up. Driver told me the address is 0x%0h", req.paddr), UVM_LOW)
+            wait_cycles = $urandom_range(0,3);
+            req.wait_cycles = wait_cycles;
+            start_item(req);
+            //if (!req.randomize() with { wait_cycles inside {[0:3]}; }) begin
+            //    `uvm_error("APB_SLV_RESP_SEQ", "Randomization failed")
+            //end
+            if (req.pwrite == APB_READ) begin
+                assert(p_sequencer.s_cfg != null) else `uvm_fatal("apb_sequence", "p_sequencer.s_cfg is null!")
+                req.pdata = p_sequencer.s_cfg.storage.read(req.paddr);
+                `uvm_info("APB_SLV_RESP_SEQ", $sformatf("READ REQ: Addr=0x%0h, Data=0x%0h", req.paddr, req.pdata), UVM_LOW)
             end
 
-            start_item(req);
             finish_item(req);
-            //--wait_for_item_done();
         end
     endtask
 endclass

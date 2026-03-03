@@ -1,7 +1,8 @@
 `timescale 1ns / 1ps
 class apb_driver extends uvm_driver #(apb_item);
     `uvm_component_utils(apb_driver)
-    apb_agent_config      agent_cfg;
+    apb_agent_config      cfg;
+    apb_slave_config      s_cfg;
     apb_item req;
     virtual apb_interface vif;
 
@@ -13,8 +14,9 @@ class apb_driver extends uvm_driver #(apb_item);
         super.build_phase(phase);
         if (!uvm_config_db#(virtual apb_interface)::get(this, "", "vif", vif))
             `uvm_fatal("NOVIF", {"vitual interface must be set for ", get_full_name(), ".vif"});
-        if(!uvm_config_db#(apb_agent_config)::get(this, "", "cfg", agent_cfg))
-            `uvm_error("NO_CFG", "apb_slave_config object not found!")
+        if(!uvm_config_db#(apb_agent_config)::get(this, "", "cfg", cfg))
+            `uvm_fatal("NO_CFG", "apb_slave_config object not found!")
+
     endfunction : build_phase
 
     virtual task run_phase(uvm_phase phase);

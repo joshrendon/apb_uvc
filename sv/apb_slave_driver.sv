@@ -2,7 +2,6 @@
 `define APB_SLAVE_DRIVER_SV
 class apb_slave_driver extends apb_driver;
     `uvm_component_utils(apb_slave_driver)
-    apb_slave_config s_cfg;
 
     function new(string name="apb_slave_driver", uvm_component parent=null);
         super.new(name,parent);
@@ -10,15 +9,9 @@ class apb_slave_driver extends apb_driver;
 
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
+
+        assert($cast(s_cfg, cfg)) else `uvm_fatal("apb_slave_driver", "couldn't cast to s_cfg")
     endfunction : build_phase
-
-    virtual function void start_of_simulation_phase(uvm_phase phase);
-        super.start_of_simulation_phase(phase);
-
-        assert ($cast(s_cfg, agent_cfg) == 1 ) else begin
-            `uvm_fatal("APB_SLV_DRV", "Could not cast agent configuration to apb_slave_config")
-        end
-    endfunction : start_of_simulation_phase
 
     virtual task run_phase(uvm_phase phase);
         repeat(5) @(vif.slave_cb);
@@ -31,6 +24,7 @@ class apb_slave_driver extends apb_driver;
     endtask : run_phase
 
     virtual task send_to_dut(apb_item req);
+        logic [`APB_MAX_ADDR_WIDTH-1:0] index;
         vif.slave_cb.pready  <= 1'b0;
         vif.slave_cb.pslverr <= 1'b0;
         vif.slave_cb.prdata  <= 32'h0;
@@ -45,15 +39,19 @@ class apb_slave_driver extends apb_driver;
         if (req.wait_cycles > 0) begin
             `uvm_info("APB_SLV_DRV", $sformatf("Inserting %0d wait states", req.wait_cycles), UVM_LOW)
             repeat (req.wait_cycles) begin
-                //vif.slave_cb.pready <= 1'b0;
                 @(vif.slave_cb);
             end
         end
         
         // Finalize transaction
         if (vif.slave_cb.penable) begin
-            `uvm_info("APB_SLV_DRV", $sformatf("received psel %0d driving req:\n%s", s_cfg.psel_index, req.sprint()), UVM_LOW)
-            vif.slave_cb.pready <= 1'b1;
+            `uvm_info("APB_SLV_DRV", $sformatf("s_cfg:\n%s", s_cfg.sprint()), UVM_LOW)
+            `uvm_info("apb_slave_driver", $sformatf("$size(s_cfg.storage.mem) = %0d", $size(s_cfg.storage.mem)), UVM_NONE)
+
+            s_cfg.storage.display_mem();
+
+            `uvm_info("APB_SLV_DRV", $sformatf("received penable & psel %0d driving req:\n%s", s_cfg.psel_index, req.sprint()), UVM_LOW)
+            vif.slave_cb.pready  <= 1'b1;
             vif.slave_cb.pslverr <= req.pslverr;
 
             if (vif.slave_cb.pwrite == APB_READ) begin

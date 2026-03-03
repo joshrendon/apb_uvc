@@ -33,5 +33,8 @@ interface apb_interface();
         input pstrb;
     endclocking : monitor_cb
 
+    // Include formal verification properties (SVA) - defined in apb_formal.sv
+    `include "apb_formal.sv"
+
 endinterface
 `endif

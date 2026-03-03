@@ -13,6 +13,23 @@ class reg_leds extends uvm_reg;
         leds = uvm_reg_field::type_id::create("leds");
         //parent, size, lsb_pos, access, volatile, resetval, has_reset,
         //is_rand, individually_accessible
+        leds.configure(this, 4, 0, "RO", 0, 4'h0, 1, 1, 0);
+    endfunction
+endclass
+
+class reg_rgb_leds extends uvm_reg;
+    `uvm_object_utils(reg_rgb_leds)
+
+    rand uvm_reg_field leds;
+
+    function new(string name = "reg_rgb_leds");
+        super.new(name, 32, UVM_NO_COVERAGE);
+    endfunction
+
+    virtual function void build();
+        leds = uvm_reg_field::type_id::create("leds");
+        //parent, size, lsb_pos, access, volatile, resetval, has_reset,
+        //is_rand, individually_accessible
         leds.configure(this, 4, 0, "RW", 0, 4'h0, 1, 1, 0);
     endfunction
 endclass
@@ -68,10 +85,11 @@ endclass
 
 class apb_reg_block extends uvm_reg_block;
     `uvm_object_utils(apb_reg_block)
-    rand reg_leds    GPIO_LEDS;   // @ offset 0x00
-    reg_inputs       GPIO_INPUTS; // @ offset 0x08
-    reg_id           BOARD_ID;    // @ offset 0x0C
-    rand reg_scratch SCRATCH;     // @ offset 0x10
+    rand reg_leds      GPIO_LEDS;     // @ offset 0x00
+    rand reg_rgb_leds  GPIO_LEDS_RGB; // @ offset 0x04
+    reg_inputs         GPIO_INPUTS;   // @ offset 0x08
+    reg_id             BOARD_ID;      // @ offset 0x0C
+    rand reg_scratch   SCRATCH;       // @ offset 0x10
 
     function new(string name = "apb_reg_block");
         super.new(name, UVM_NO_COVERAGE);
@@ -84,6 +102,11 @@ class apb_reg_block extends uvm_reg_block;
         GPIO_LEDS.configure(this);
         GPIO_LEDS.build();
         default_map.add_reg(GPIO_LEDS, 'h00, "RW");
+
+        GPIO_LEDS_RGB = reg_rgb_leds::type_id::create("GPIO_LEDS_RGB");
+        GPIO_LEDS_RGB.configure(this);
+        GPIO_LEDS_RGB.build();
+        default_map.add_reg(GPIO_LEDS_RGB, 'h04, "RW");
 
         GPIO_INPUTS = reg_inputs::type_id::create("GPIO_INPUTS");
         GPIO_INPUTS.configure(this);

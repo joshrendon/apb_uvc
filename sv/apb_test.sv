@@ -14,6 +14,7 @@ class apb_test extends uvm_test;
         cfg.add_master("master", UVM_ACTIVE);
         cfg.add_slave("slave0", 32'h4000_0000, 32'h4000_FFFF, 0, UVM_ACTIVE);
         cfg.add_slave("slave1", 32'h4001_0000, 32'h4001_FFFF, 1, UVM_ACTIVE);
+        cfg.has_bus_monitor = 1;
 
         uvm_config_db#(apb_config)::set(this, "*", "cfg", cfg);
         //uvm_config_db#(apb_master_config)::set(this, "env.master_agent*", "cfg", cfg.master_config);

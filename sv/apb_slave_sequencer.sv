@@ -4,9 +4,9 @@
 class apb_slave_sequencer extends uvm_sequencer#(apb_item);
     `uvm_component_utils(apb_slave_sequencer)
     
-    uvm_analysis_export #(apb_item) request_export;
+    uvm_analysis_imp #(apb_item, apb_slave_sequencer) request_export;
     uvm_tlm_analysis_fifo #(apb_item) request_fifo;
-    logic [31:0] slave_mem [logic[31:0]];
+    apb_slave_config     s_cfg;
 
     function new(string name="apb_slave_sequencer", uvm_component parent=null);
         super.new(name,parent);
@@ -20,7 +20,13 @@ class apb_slave_sequencer extends uvm_sequencer#(apb_item);
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
-        request_export.connect(request_fifo.analysis_export);
+    endfunction
+
+    virtual function void write(apb_item trans);
+        if (s_cfg.check_address_range(trans.paddr)) begin
+            `uvm_info("apb_slave_sequencer", $sformatf("Accepted request for addr: 0x%0h", trans.paddr), UVM_LOW)
+            request_fifo.analysis_export.write(trans);
+        end
     endfunction
 
 endclass

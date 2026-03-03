@@ -9,6 +9,8 @@ class apb_item extends uvm_sequence_item;
     rand bit [`APB_MAX_STROBE_WIDTH-1:0]   pstrb;
     rand bit                               pslverr;
     rand int                               wait_cycles;
+    bit                                    is_b2b;           // Back-to-back transaction flag (monitor-detected)
+    bit [`APB_MAX_SEL_WIDTH-1:0]           active_psel;       // Track which slave was active
 
     `uvm_object_utils_begin(apb_item)
         `uvm_field_int(paddr,        UVM_ALL_ON)
@@ -18,6 +20,8 @@ class apb_item extends uvm_sequence_item;
         `uvm_field_int(pstrb,        UVM_ALL_ON)
         `uvm_field_int(pslverr,      UVM_ALL_ON)
         `uvm_field_int(wait_cycles,  UVM_ALL_ON)
+        `uvm_field_int(is_b2b,       UVM_DEFAULT)
+        `uvm_field_int(active_psel,  UVM_DEFAULT)
     `uvm_object_utils_end
 
     function new(string name="apb_item");
