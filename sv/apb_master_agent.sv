@@ -5,11 +5,14 @@ class apb_master_agent extends uvm_agent;
     `uvm_component_utils(apb_master_agent)
     uvm_analysis_port #(apb_item) ap;
 
-    apb_monitor          mon;
     apb_master_driver    drv;
     apb_master_sequencer seq;
     apb_agent_config     cfg;
     apb_master_config    m_cfg;
+
+    `ifdef COVERAGE
+        apb_master_coverage_subscriber cov_sub;
+    `endif
 
     function new(string name="apb_master_agent", uvm_component parent=null);
         super.new(name,parent);
@@ -21,16 +24,22 @@ class apb_master_agent extends uvm_agent;
         if (!uvm_config_db#(apb_agent_config)::get(this, "*", "cfg", cfg)) begin
             `uvm_error("CFG_NOT_FOUND", "APB_MASTER_CFG not found in uvm_config_db")
         end
-        if ($cast(m_cfg, cfg)) begin
+        if (!$cast(m_cfg, cfg)) begin
+            `uvm_fatal("apb_master_agent", "Config object is not of type apb_master_config")
+        end
             
             is_active = m_cfg.is_active;
             ap = new ("ap", this);
-            mon = apb_monitor::type_id::create("mon", this);
             if (is_active == UVM_ACTIVE) begin
                 seq = apb_master_sequencer::type_id::create("seq", this);
                 drv = apb_master_driver::type_id::create("drv", this);
             end
-        end
+
+            `ifdef COVERAGE
+                if (m_cfg.has_coverage) begin
+                    cov_sub = apb_master_coverage_subscriber::type_id::create("apb_master_coverage_subscriber", this);
+                end
+            `endif
     endfunction
 
     virtual function void connect_phase(uvm_phase phase);
@@ -38,7 +47,12 @@ class apb_master_agent extends uvm_agent;
         if (is_active == UVM_ACTIVE) begin
             drv.seq_item_port.connect(seq.seq_item_export);
         end
-        mon.item_collected_port.connect(this.ap);
+
+        `ifdef COVERAGE
+            if (m_cfg.has_coverage) begin
+                this.ap.connect(cov_sub.analysis_export);
+            end
+        `endif
     endfunction
 endclass
 `endif

@@ -4,7 +4,9 @@
 class apb_monitor extends uvm_monitor;
     `uvm_component_utils(apb_monitor)
 
-    apb_agent_config cfg;
+    apb_agent_config  cfg;
+    apb_master_config m_cfg;
+    apb_slave_config  s_cfg;
 
     virtual apb_interface vif;
     uvm_analysis_port #(apb_item) item_collected_port;
@@ -23,35 +25,42 @@ class apb_monitor extends uvm_monitor;
         if (!uvm_config_db#(virtual apb_interface)::get(this, "", "vif", vif))
             `uvm_fatal("NOVIF", {"vitual interface must be set for ", get_full_name(), ".vif"});
         if (!uvm_config_db#(apb_agent_config)::get(this, "", "cfg", cfg)) begin
-            `uvm_error("NOCFG", "Config not found for monitor")
+            `uvm_fatal("NOCFG", "Config not found for monitor")
         end
-        `uvm_info("MON_DBG_PATH", $sformatf("My full path is: %s", get_full_name()), UVM_LOW)
+    
+        if (!cfg.is_master) begin
+            if(!$cast(s_cfg, cfg)) begin
+                `uvm_fatal("apb_monitor", "couldn't cast to s_cfg")
+            end
+        end
+
     endfunction
 
     virtual task run_phase(uvm_phase phase);
+        @(vif.monitor_cb);
         forever begin
             collect_transaction();
+            @(vif.monitor_cb);
         end 
     endtask : run_phase
 
     task collect_transaction();
         apb_state_t apb_state;
+        apb_logic_data_t wdata = '0;
 
+        //assert(s_cfg != null) else `uvm_fatal("APB_MON","s_cfg is null!")
+        //assert($cast(s_cfg, cfg)) else `uvm_fatal("apb_monitor", "couldn't cast to s_cfg")
+        
         // 1. Wait for SETUP phase (PSEL must be high, PENABLE is low)
         apb_state = APB_IDLE;
         `uvm_info("apb_monitor", $sformatf("apb_state: %p", apb_state.name()), UVM_LOW)
-        //@(vif.monitor_cb);
 
         if (cfg.is_master) begin
             @(vif.monitor_cb iff (|vif.monitor_cb.psel));
         end else begin
-            apb_slave_config s_cfg;
-            if ($cast(s_cfg, cfg)) begin
-                @(vif.monitor_cb iff (vif.monitor_cb.psel[s_cfg.psel_index]));
-            end
+            @(vif.monitor_cb iff (vif.monitor_cb.psel[s_cfg.psel_index]));
         end
 
-        //if (|vif.monitor_cb.psel && !vif.monitor_cb.penable) begin
         if (!vif.monitor_cb.penable) begin
             trans = apb_item::type_id::create("trans");
             apb_state = APB_SETUP;
@@ -64,6 +73,17 @@ class apb_monitor extends uvm_monitor;
             if (vif.monitor_cb.pwrite) begin
                 trans.pdata = vif.monitor_cb.pwdata;
                 trans.pstrb = vif.monitor_cb.pstrb;
+
+                ///if (cfg.addr_map.decode())
+                if (trans.psel[s_cfg.psel_index]) begin
+                    //Apply pstrb signals to pdata
+                    for (int i = 0; i < (`APB_MAX_DATA_WIDTH/8); i++) begin
+                        if (trans.pstrb[i]) begin
+                            wdata[(i*8) +: 8] = trans.pdata[(i*8) +: 8];
+                        end
+                    end
+                    cfg.storage.write(trans.paddr, wdata);
+                end
             end 
             request_aport.write(trans);
 
@@ -80,7 +100,6 @@ class apb_monitor extends uvm_monitor;
             // Send data to the scoreboard
             item_collected_port.write(trans);
             ->sampling_trans;
-            //`uvm_info("apb_monitor", $sformatf("Collected: %s", trans.convert2string()), UVM_LOW)
             `uvm_info("apb_monitor", $sformatf("Collected: %s", trans.sprint()), UVM_LOW)
             `uvm_info("apb_monitor", $sformatf("apb_state: %s", apb_state.name()), UVM_LOW)
         end

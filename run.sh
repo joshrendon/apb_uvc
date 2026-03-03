@@ -1,5 +1,12 @@
-xvlog -sv -L uvm  project_2.srcs/sources_1/new/apb_types.sv project_2.srcs/sources_1/new/apb_interface.sv
-xvlog -sv -L uvm project_2.srcs/sources_1/new/apb_pkg.sv
-xvlog -sv -L uvm project_2.srcs/sources_1/new/apb_dut.sv project_2.srcs/sources_1/new/top.sv
-xelab -L uvm --timescale 1ns/1ps top
-xsim -R top -testplusarg UVM_TEST=random_apb_test -testplusarg UVM_VERBOSITY=UVM_LOW
+TEST_NAME=${1:-"apb_wr_test"}
+
+echo "Compiling with Vivado XSIM..."
+xvlog -sv -L uvm sv/apb_types.sv sv/apb_interface.sv
+
+xvlog -sv -L uvm sv/apb_pkg.sv
+
+xvlog -sv -L uvm sv/tb_top.sv
+echo "Running without coverage..."
+xelab -L uvm --timescale 1ns/1ps tb_top
+        
+xsim -R tb_top -testplusarg UVM_TESTNAME=$TEST_NAME -testplusarg UVM_VERBOSITY=UVM_LOW --f run.f

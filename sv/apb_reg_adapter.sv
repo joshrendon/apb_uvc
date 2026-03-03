@@ -14,6 +14,8 @@ class apb_reg_adapter extends uvm_reg_adapter;
         item.paddr = rw.addr;
         item.pwrite = (rw.kind == UVM_WRITE) ? APB_WRITE : APB_READ;
         item.pdata  = rw.data;
+        // cfg.addr_map.decode(rw.addr)
+        // psel =  cfg.addr_map.decode(rw.addr);
         item.psel   = 2'b01; // Hardcoded to SLV0 for now
         item.pstrb  = 4'hf; 
         return item;

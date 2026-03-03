@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 class apb_master_driver extends apb_driver;
     `uvm_component_utils(apb_master_driver)
-    apb_config cfg;
 
     function new(string name="apb_master_driver", uvm_component parent=null);
         super.new(name,parent);
@@ -10,8 +9,10 @@ class apb_master_driver extends apb_driver;
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
 
-        if(!uvm_config_db#(apb_config)::get(this,"", "cfg", cfg))
-            `uvm_error("NO_CFG", "Config object not found!")
+        if(!uvm_config_db#(apb_agent_config)::get(this,"", "cfg", cfg))
+            `uvm_fatal("NO_CFG", "Config object not found!")
+
+        //assert($cast(s_cfg, cfg)) else `uvm_fatal("apb_slave_driver", "couldn't cast to s_cfg")
     endfunction : build_phase
 
     virtual task run_phase(uvm_phase phase);
@@ -29,7 +30,8 @@ class apb_master_driver extends apb_driver;
     endtask : run_phase
 
     virtual task send_to_dut(apb_item trans);
-        int slave_idx = cfg.get_slave_psel_by_addr(trans.paddr);
+        //int slave_idx = cfg.get_slave_psel_by_addr(trans.paddr);
+        int slave_idx = cfg.addr_map.decode(trans.paddr);
 
         int wait_cycles;
         logic [`APB_MAX_DATA_WIDTH-1:0] wdata = 32'b0;

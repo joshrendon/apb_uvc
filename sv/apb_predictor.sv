@@ -42,4 +42,41 @@ class apb_predictor extends uvm_component;
     endfunction
 
 endclass
+
+class apb_reg_predictor extends uvm_reg_predictor#(apb_item);
+    `uvm_component_utils(apb_reg_predictor);
+
+    uvm_analysis_imp #(apb_item, apb_reg_predictor) ap;
+
+    function new(string name = "apb_reg_predictor", uvm_component parent);
+        super.new(name, parent);
+        ap = new("ap", this);
+    endfunction
+
+    virtual function void write(apb_item tr);
+        uvm_reg_bus_op rw;
+        uvm_reg regs[$];
+        rw.kind = tr.pwrite ? UVM_WRITE : UVM_READ;
+        rw.addr = tr.paddr;
+        rw.data = tr.pdata;
+        rw.status = UVM_IS_OK; //update to pslverr ? 
+
+        if (map != null) begin
+            uvm_reg r;
+            r = map.get_reg_by_offset(rw.addr);
+
+            map.get_registers(regs);
+            foreach (regs[i]) begin
+               `uvm_info("APB_REG_PREDICTOR", $sformatf("map: %s 0x%0h", regs[i].get_name(), regs[i].get_address()), UVM_LOW)
+            end
+            if (r != null) begin
+                r.predict(rw.data, -1, UVM_PREDICT_DIRECT, UVM_FRONTDOOR, null);
+            end else begin
+                `uvm_error("APB_REG_PREDICTOR", $sformatf("No register found at address 0x%0h", rw.addr))
+            end
+        end else begin
+            `uvm_error("APB_REG_PREDICTOR", "Register map is NULL!")
+        end
+    endfunction
+endclass
 `endif

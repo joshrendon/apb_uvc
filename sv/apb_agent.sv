@@ -17,7 +17,7 @@ class apb_agent extends uvm_agent;
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
 
-        if (!uvm_config_db#(apb_config)::get(this, "", "apb_config", cfg)) begin
+        if (!uvm_config_db#(apb_config)::get(this, "", "cfg", cfg)) begin
             `uvm_error("CFG_NOT_FOUND", "APB_CFG not found in uvm_config_db")
         end
         ap = new ("ap", this);
