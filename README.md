@@ -1,37 +1,31 @@
 # apb_uvc
-UVM APB UVC with Coverage and Formal Verification
+UVM APB UVC with Functional Coverage
 
 ## Overview
 
-Complete UVM-based APB Verification IP (VIP) with:
+UVM-based APB Verification IP (VIP) with:
 - **UVM Testbench**: Master/slave agents, scoreboard, RAL model
 - **Functional Coverage**: Transaction patterns, B2B sequences, wait states
 - **Code Coverage**: Line, branch, and condition coverage
-- **Formal Verification**: SymbiYosys properties for protocol compliance
 
 ![apb_wave](documentation/apb_wr_then_rd_waves.png)
 
 ## Directory Structure
 
 ```
-├── formal/                   # Formal verification (SymbiYosys)
-│   ├── apb_formal.sv         # SVA properties
-│   ├── Makefile              # Build and verify commands
-│   └── README.md             # Formal verification guide
-│
 ├── sv/                       # UVM SystemVerilog files
-│   ├── apb_interface.sv      # APB interface with SVA includes
+│   ├── apb_interface.sv      # APB interface
 │   ├── apb_coverage.sv       # Functional coverage groups
-│   ├── apb_bus_monitor.sv    # B2B detection & coverage collector
-│   ├── apb_item.sv           # Transaction model (with is_b2b flag)
-│   ├── tb_top.sv             # Original testbench
-│   └── eda_playground.sv     # Coverage testbench for EDA Playground
+│   ├── apb_bus_monitor.sv    # APB Bust monitor & coverage collector
+│   ├── apb_item.sv           # Transaction model
+│   └── tb_top.sv             # TB top
+│   
 │
 ├── rtl/                      # DUT and top-level RTL
-│   ├── top.sv                # Testbench top with FPGA I/O
+│   ├── top.sv                # RTL top with FPGA I/O
 │   └── apb_slave_dut.sv      # APB slave DUT with registers
 │
-├── doc/                      # Waveforms and documentation
+├── documentation/            # Waveforms and documentation
 │
 ├── run.sh                    # Quick simulation script
 └── README.md                 # This file
@@ -51,15 +45,6 @@ Complete UVM-based APB Verification IP (VIP) with:
 
 ```
 ┌─────────────────────┐
-│  Formal Properties  │
-│  (SymbiYosys)       │
-│  - PSEL protocol    │
-│  - PREADY timing    │
-│  - Data stability   │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
 │  Functional         │
 │  Coverage           │
 │  (Xcellium/EDA)     │
@@ -77,8 +62,3 @@ Complete UVM-based APB Verification IP (VIP) with:
 └──────────────────────┘
 ```
 
-## References
-
-- [SymbiYosys Documentation](https://yosyshq.net/symbiyosys/)
-- [APB Protocol Specification](https://developer.arm.com/documentation/ihi0022/latest/)
-- [EDA Playground](https://www.edaplayground.com/)
